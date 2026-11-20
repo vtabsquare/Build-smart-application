@@ -1,5 +1,6 @@
 """Archive estimates to the connected account's Drive and spreadsheet."""
 import json
+import os
 import threading
 import uuid
 from urllib.parse import quote
@@ -92,9 +93,12 @@ def archive_estimate(estimate_id, project, builder):
                 store(estimate_id, archive)
             existing = checked(client.get(values_url(sheet, 'A2:A'), timeout=TIMEOUT)).get('values', [])
             if not any(row and row[0] == estimate_id for row in existing):
-                customer = (estimate.get('input_json') or {}).get('customer_name', '')
-                row = [estimate_id, project['name'], customer, estimate['generated_at'],
-                       estimate['grand_total'], archive['pdf_url']]
+                input_data = estimate.get('input_json') or {}
+                customer = (input_data.get('customer_name') or input_data.get('customer') or 
+                            input_data.get('client_name') or input_data.get('client') or 
+                            project.get('customer_name') or '')
+                row = [estimate_id, project.get('name', 'Project'), customer, estimate.get('generated_at') or estimate.get('created_at'),
+                       estimate.get('grand_total', 0), archive.get('pdf_url', '')]
                 checked(client.post(values_url(sheet, 'A1:F') + ':append',
                                     params={'valueInputOption': 'RAW', 'insertDataOption': 'INSERT_ROWS'},
                                     json={'values': [row]}, timeout=TIMEOUT))

@@ -25,7 +25,7 @@ def archive_saved_estimate(estimate_id, project, user_id):
             'id', user_id).single().execute().data or {}
         return archive_estimate(estimate_id, project, builder)
     except Exception as exc:
-        current_app.logger.warning('PDF archive pending for estimate %s (%s)', estimate_id, type(exc).__name__)
+        current_app.logger.exception('PDF archive failed for estimate %s: %s', estimate_id, exc)
         return {'status': 'pending'}
 
 

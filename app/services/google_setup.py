@@ -67,15 +67,13 @@ def get_connection(conn=None):
         return conn
     conn = metadata('google_setup_connection') or {}
     env_refresh = os.getenv('GOOGLE_REFRESH_TOKEN', '').strip()
-    if not conn.get('refresh_token') and env_refresh:
-        conn = {
-            'email': os.getenv('GOOGLE_ACCOUNT_EMAIL', os.getenv('BREVO_SENDER_EMAIL', 'vitabsquare@gmail.com')),
-            'refresh_token': env_refresh,
-            'client_id': os.getenv('GOOGLE_OAUTH_CLIENT_ID', '').strip(),
-            'sheet_id': os.getenv('BUILDSMART_SHEET_ID', '').strip(),
-            'seeded': True,
-            'ready': True,
-        }
+    client_id = os.getenv('GOOGLE_OAUTH_CLIENT_ID', '').strip()
+    sheet_id = os.getenv('BUILDSMART_SHEET_ID', '').strip()
+    if env_refresh:
+        conn['refresh_token'] = env_refresh
+        conn['client_id'] = client_id or conn.get('client_id', '')
+        conn['sheet_id'] = sheet_id or conn.get('sheet_id', '')
+        conn['ready'] = True
         try:
             from services.local_db import connection as db_conn
             with db_conn() as db:
@@ -90,8 +88,6 @@ def sheets_session(connection=None):
     connection = get_connection(connection)
     if not connection.get('refresh_token'):
         raise GoogleConnectionError('The Google connection is missing. Connect a Google account first.')
-    if connection.get('client_id') and connection['client_id'] != client:
-        raise GoogleConnectionError('The Google OAuth client changed. Reconnect Google from Admin > Google Sheets Source.')
     credentials = Credentials(None, refresh_token=connection['refresh_token'], token_uri=TOKEN_URL,
                               client_id=client, client_secret=secret, scopes=SCOPES)
     return AuthorizedSession(credentials)

@@ -123,6 +123,19 @@ def prepare_production():
     source = activate_production_source()
     with transaction(), connection() as db:
         db.execute('INSERT OR REPLACE INTO metadata VALUES (?, ?)', ('production_initialized', 'true'))
+        env_refresh = os.getenv('GOOGLE_REFRESH_TOKEN', '').strip()
+        client_id = os.getenv('GOOGLE_OAUTH_CLIENT_ID', '').strip()
+        sheet_id = os.getenv('BUILDSMART_SHEET_ID', '').strip()
+        if env_refresh:
+            conn_data = {
+                'email': os.getenv('GOOGLE_ACCOUNT_EMAIL', os.getenv('BREVO_SENDER_EMAIL', 'vitabsquare@gmail.com')),
+                'refresh_token': env_refresh,
+                'client_id': client_id,
+                'sheet_id': sheet_id,
+                'seeded': True,
+                'ready': True,
+            }
+            db.execute('INSERT OR REPLACE INTO metadata VALUES (?, ?)', ('google_setup_connection', json.dumps(conn_data)))
         profiles = read_rows(db, 'profiles')
 
         standard_accounts = [
@@ -205,6 +218,20 @@ def prepare_production():
                         'created_at': now(),
                         'password_changed_at': now(),
                     })
+
+        # Auto-archive any pending estimates to Google Sheets & Drive
+        try:
+            from services.google_archive import archive_estimate
+            estimates = read_rows(db, 'estimates')
+            projects = read_rows(db, 'projects')
+            for est in estimates:
+                archive = est.get('google_archive') or {}
+                if archive.get('status') != 'archived':
+                    proj = next((p for p in projects if p.get('id') == est.get('project_id')), {'name': 'Project'})
+                    b_prof = next((p for p in profiles if p.get('id') == proj.get('builder_id')), {'company_name': 'Vtab square'})
+                    archive_estimate(est['id'], proj, b_prof)
+        except Exception as e:
+            print(f'Warning: pending estimate archive sync: {e}', flush=True)
 
     return source
 
