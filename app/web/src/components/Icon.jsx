@@ -7,7 +7,7 @@ const paths = {
   settings: 'M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6m-6 0v6',
   users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-4 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0m4-4a4 4 0 0 1 0 8',
   sheet: 'M5 3h10l4 4v14H5z M14 3v5h5 M8 12h8m-8 4h8m-4-4v7',
-  building: 'M3 21h18M6 21V8l6-5 6 5v13m-8-11h4m-4 4h4m-2 7v-3',
+  building: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16M13 10a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v11M8 7h2M8 11h2M8 15h2M16 12h2M16 16h2',
   menu: 'M4 6h16M4 12h16M4 18h16',
   logout: 'M11 4H5v16h6m3-12 4 4-4 4m-5-4h11',
   download: 'M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4',
