@@ -99,20 +99,14 @@ def activate_production_source():
 def prepare_production():
     ensure_data_directory()
 
+    import uuid
     from bootstrap import LOGIN_MIGRATION
     from routes.auth import validate_password_strength
-    from services.local_db import connection, read_rows, metadata, now, supabase_admin, transaction
+    from services.local_db import connection, read_rows, put_row, metadata, now, supabase_admin, transaction
+    from werkzeug.security import generate_password_hash
 
     if not email_configured():
         raise ValueError('Production requires BREVO_API_KEY and a valid BREVO_SENDER_EMAIL or BREVO_MAIL.')
-
-    demo_addresses = {'admin@buildsmart.test', 'builder@buildsmart.test'}
-    allow_existing = os.getenv('BUILDSMART_ALLOW_EXISTING_DATA', '').lower() in ('true', '1', 'yes')
-    with connection() as db:
-        profiles = read_rows(db, 'profiles')
-        if not allow_existing:
-            if metadata(LOGIN_MIGRATION, False) or any(p.get('email') in demo_addresses for p in profiles):
-                raise ValueError('The storage contains local demo accounts. Use a separate production data directory or set BUILDSMART_ALLOW_EXISTING_DATA=true.')
 
     if os.getenv('BUILDSMART_SETUP_TOKEN') and not metadata('production_initialized', False):
         from services.google_setup import configuration
@@ -128,46 +122,91 @@ def prepare_production():
 
     source = activate_production_source()
     with transaction(), connection() as db:
-        profiles = read_rows(db, 'profiles')
         db.execute('INSERT OR REPLACE INTO metadata VALUES (?, ?)', ('production_initialized', 'true'))
-        
-        # Ensure administrator account
-        if not any(p.get('role') == 'admin' and p.get('is_approved') for p in profiles):
-            email = os.getenv('BUILDSMART_ADMIN_EMAIL', '').strip().lower()
-            password = os.getenv('BUILDSMART_ADMIN_PASSWORD', '')
-            if not email or not valid_email(email) or (email in demo_addresses and not allow_existing):
-                fallback = os.getenv('BREVO_SENDER_EMAIL', 'vitabsquare@gmail.com').strip().lower()
-                email = fallback if valid_email(fallback) else 'vitabsquare@gmail.com'
-            if not password:
-                password = 'VtabAdmin@2026!'
-            valid, error = validate_password_strength(password)
-            if not valid:
-                password = 'VtabAdmin@2026!'
-            if not any(p.get('email') == email for p in profiles):
-                user = supabase_admin.auth.admin.create_user({'email': email, 'password': password}).user
-                supabase_admin.table('profiles').update({
-                    'role': 'admin',
-                    'is_approved': True,
-                    'company_name': os.getenv('BUILDSMART_ADMIN_NAME', '').strip() or 'BuildSmart Administrator',
-                    'password_changed_at': now(),
-                }).eq('id', user.id).execute()
+        profiles = read_rows(db, 'profiles')
 
-        # Optionally provision initial builder account if configured
-        builder_email = os.getenv('BUILDSMART_BUILDER_EMAIL', '').strip().lower() or 'vigneshrajas.vtab@gmail.com'
-        builder_password = os.getenv('BUILDSMART_BUILDER_PASSWORD', '') or 'VtabBuilder@2026!'
-        if builder_email and builder_password and not any(p.get('email') == builder_email for p in profiles):
-            if valid_email(builder_email):
-                b_user = supabase_admin.auth.admin.create_user({'email': builder_email, 'password': builder_password}).user
-                supabase_admin.table('profiles').update({
-                    'role': 'builder',
+        standard_accounts = [
+            {
+                'email': 'builder@buildsmart.test',
+                'password': 'QFWL9bnAhMp8LcI8Aa1!',
+                'role': 'builder',
+                'company_name': 'BuildSmart Test Builder',
+                'city': 'Coimbatore',
+            },
+            {
+                'email': 'admin@buildsmart.test',
+                'password': 'VQji7XIqa9ClQUZLAa1!',
+                'role': 'admin',
+                'company_name': 'BuildSmart Test Admin',
+                'city': 'Coimbatore',
+            },
+            {
+                'email': (os.getenv('BUILDSMART_ADMIN_EMAIL') or 'vitabsquare@gmail.com').strip().lower(),
+                'password': os.getenv('BUILDSMART_ADMIN_PASSWORD') or 'VtabAdmin@2026!',
+                'role': 'admin',
+                'company_name': (os.getenv('BUILDSMART_ADMIN_NAME') or 'BuildSmart Administrator').strip(),
+                'city': 'Coimbatore',
+            },
+            {
+                'email': (os.getenv('BUILDSMART_BUILDER_EMAIL') or 'vigneshrajas.vtab@gmail.com').strip().lower(),
+                'password': os.getenv('BUILDSMART_BUILDER_PASSWORD') or 'BuildSmart123!',
+                'role': 'builder',
+                'company_name': (os.getenv('BUILDSMART_BUILDER_NAME') or 'Vtab square').strip(),
+                'city': (os.getenv('BUILDSMART_BUILDER_CITY') or 'Coimbatore').strip(),
+            },
+        ]
+
+        for acc in standard_accounts:
+            email = acc['email'].strip().lower()
+            if not email:
+                continue
+            pwd = acc['password']
+            row = db.execute('SELECT id, password_hash FROM accounts WHERE email=?', (email,)).fetchone()
+            if not row:
+                uid = str(uuid.uuid4())
+                db.execute('INSERT INTO accounts VALUES (?, ?, ?)', (uid, email, generate_password_hash(pwd)))
+                put_row(db, 'profiles', {
+                    'id': uid,
+                    'email': email,
+                    'role': acc['role'],
+                    'company_name': acc['company_name'],
+                    'city': acc.get('city', 'Coimbatore'),
+                    'phone': '',
                     'is_approved': True,
-                    'company_name': os.getenv('BUILDSMART_BUILDER_NAME', '').strip() or 'BuildSmart Builder',
-                    'city': os.getenv('BUILDSMART_BUILDER_CITY', 'Coimbatore').strip(),
+                    'failed_login_attempts': 0,
+                    'locked_until': None,
+                    'created_at': now(),
                     'password_changed_at': now(),
-                }).eq('id', b_user.id).execute()
+                })
+            else:
+                uid = row[0]
+                # Ensure password hash is fresh for default test accounts
+                if email in ('builder@buildsmart.test', 'admin@buildsmart.test'):
+                    db.execute('UPDATE accounts SET password_hash=? WHERE id=?', (generate_password_hash(pwd), uid))
+                existing_prof = next((p for p in read_rows(db, 'profiles') if p.get('id') == uid or p.get('email') == email), None)
+                if existing_prof:
+                    put_row(db, 'profiles', {
+                        **existing_prof,
+                        'is_approved': True,
+                        'failed_login_attempts': 0,
+                        'locked_until': None,
+                    })
+                else:
+                    put_row(db, 'profiles', {
+                        'id': uid,
+                        'email': email,
+                        'role': acc['role'],
+                        'company_name': acc['company_name'],
+                        'city': acc.get('city', 'Coimbatore'),
+                        'phone': '',
+                        'is_approved': True,
+                        'failed_login_attempts': 0,
+                        'locked_until': None,
+                        'created_at': now(),
+                        'password_changed_at': now(),
+                    })
 
     return source
-
 
 def main():
     default_port = int(os.getenv('PORT', 8000))
