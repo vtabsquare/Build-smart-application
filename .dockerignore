@@ -1,0 +1,15 @@
+.git
+.venv
+venv/
+__pycache__
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+data/
+.env
+.env.local
+.env.*
+tests/
+scratch/
+brain/
+*.log

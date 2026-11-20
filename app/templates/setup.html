@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up BuildSmart 360</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#165751,#0b202d 55%);color:#eef8f8;font:16px/1.5 system-ui,sans-serif;min-height:100vh;padding:clamp(18px,5vw,68px)}
+main{max-width:760px;margin:auto}header{color:#99efd4;font-weight:800;letter-spacing:.025em;margin-bottom:20px}
+section{background:#142f3d;border:1px solid #ffffff30;border-radius:20px;padding:clamp(20px,5vw,46px);box-shadow:0 18px 60px #08172090}
+h1{line-height:1.05;letter-spacing:-.045em;font-size:clamp(30px,6vw,45px);margin:0 0 16px}p{color:#c7dbe1}a{color:#a2f9de}
+form{display:grid;gap:13px}label{display:grid;gap:6px;font-weight:650;font-size:14px}input,textarea,button{font:inherit;border-radius:9px;padding:11px 13px}
+input,textarea{color:white;background:#0d2634;border:1px solid #8caeb97a;min-width:0;width:100%}
+textarea{resize:vertical}button{font-weight:800;background:#9aefd3;color:#123430;border:0;cursor:pointer;justify-self:start}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:13px}
+[role=alert]{background:#702d32;padding:10px 14px;border-radius:9px;color:white}small{color:#b9d6db}
+</style>
+</head>
+<body>
+<main>
+<header>BuildSmart 360</header>
+<section>
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+{% if reconnect %}
+<h1>Reconnect Google Sheets</h1>
+<p>Sign in with the Google account that can open your active BuildSmart spreadsheet.</p>
+<form method="post" action="{{ url_for('setup.connect') }}">
+<input type="hidden" name="csrf" value="{{ csrf }}"><button>Reconnect with Google</button>
+</form>
+<p><a href="/admin/source">Back to Google Sheets Source</a></p>
+{% elif not unlocked %}
+<h1>Set up your installation</h1>
+<p>Enter the setup code from your deployment settings to begin.</p>
+<form method="post" action="{{ url_for('setup.unlock') }}">
+<label>Setup code <input type="password" name="token" required autocomplete="off"></label>
+<button>Continue</button>
+</form>
+{% elif not sheet %}
+<h1>Connect Google Sheets</h1>
+<p>Sign in with the Google account that should own the spreadsheet. BuildSmart creates a private spreadsheet with four editable rate tables and an Estimates tab. Estimate PDFs are saved to the account's Google Drive and linked from that tab.</p>
+{% if not oauth_ready %}
+<p role="alert">Google sign-in needs a Google OAuth client ID and secret. Add <code>GOOGLE_OAUTH_CLIENT_ID</code> and <code>GOOGLE_OAUTH_CLIENT_SECRET</code> to your environment, register <code>{{ redirect_uri }}</code> as the callback, and restart BuildSmart.</p>
+{% endif %}
+<form method="post" action="{{ url_for('setup.connect') }}">
+<input type="hidden" name="csrf" value="{{ csrf }}"><button>Connect with Google</button>
+</form>
+{% if email %}
+<p>Connected as {{ email }}. If the template did not finish, try again.</p>
+<form method="post" action="{{ url_for('setup.retry') }}">
+<input type="hidden" name="csrf" value="{{ csrf }}"><button>Finish creating the Sheet</button>
+</form>
+{% endif %}
+{% else %}
+<h1>Set up your company</h1>
+<p>Google Sheets is connected as {{ email }}. <a href="https://docs.google.com/spreadsheets/d/{{ sheet }}/edit" target="_blank" rel="noopener noreferrer">Open the sample Sheet</a> to review the values. Replace illustrative rates before issuing customer estimates.</p>
+<p>These company details appear on new estimates and PDFs.</p>
+<form method="post" action="{{ url_for('setup.finish') }}" enctype="multipart/form-data">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Company name <input name="name" required maxlength="120" autocomplete="organization" value="{{ fields.get('name','') }}"></label>
+<label>Company address <textarea name="address" required maxlength="350" rows="3" autocomplete="street-address">{{ fields.get('address','') }}</textarea></label>
+<div class="grid">
+<label>Company phone <input type="tel" name="phone" maxlength="40" autocomplete="tel" value="{{ fields.get('phone','') }}"></label>
+<label>Company email <input type="email" name="email" maxlength="254" value="{{ fields.get('email','') }}"></label>
+<label>GSTIN or tax ID <input name="tax_id" maxlength="40" value="{{ fields.get('tax_id','') }}"></label>
+<label>Company logo <input type="file" name="logo" accept="image/png,image/jpeg"><small>PNG or JPEG</small></label>
+{% if not local %}
+<label>Administrator email <input type="email" name="admin_email" required maxlength="254" autocomplete="username" value="{{ fields.get('admin_email',email) }}"></label>
+<label>Administrator password <input type="password" name="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+{% endif %}
+</div>
+{% if not local %}<small>Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol.</small>{% endif %}
+<button>Complete setup</button>
+</form>
+{% endif %}
+{% if local %}<p><a href="/login">Continue to BuildSmart</a></p>{% endif %}
+</section>
+</main>
+</body>
+</html>

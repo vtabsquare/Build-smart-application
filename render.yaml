@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: buildsmart-360
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app/production.py --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: BUILDSMART_MODE
+        value: production
+      - key: BUILDSMART_SHEET_ID
+        value: 1Jb1Ht0fxR3eQUj6Rwk3N6_8hIvsTdRzMe-AGacbQYvI
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_OAUTH_REDIRECT_URI
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: "BuildSmart 360"
+      - key: BUILDSMART_ADMIN_EMAIL
+        sync: false
+      - key: BUILDSMART_ADMIN_PASSWORD
+        sync: false
+      - key: BUILDSMART_BUILDER_EMAIL
+        sync: false
+      - key: BUILDSMART_BUILDER_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false

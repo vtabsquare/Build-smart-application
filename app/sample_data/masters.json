@@ -1,0 +1,1155 @@
+{
+  "material_master": [
+    {
+      "id": "CONSTRUCTION_BASE",
+      "code": "CONSTRUCTION_BASE",
+      "name": "Base construction",
+      "category": "Construction",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CEMENT_BASE",
+      "code": "CEMENT_BASE",
+      "name": "Base cement",
+      "category": "CEMENT",
+      "unit": "Bags"
+    },
+    {
+      "id": "STEEL_BASE",
+      "code": "STEEL_BASE",
+      "name": "Base steel",
+      "category": "STEEL",
+      "unit": "Kg"
+    },
+    {
+      "id": "WINDOW_BASE",
+      "code": "WINDOW_BASE",
+      "name": "Base window",
+      "category": "WINDOW",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_FLOOR_BASE",
+      "code": "TILES_FLOOR_BASE",
+      "name": "Base floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_FLOOR_BASE",
+      "code": "TILES_BATH_FLOOR_BASE",
+      "name": "Base bath_floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_WALL_BASE",
+      "code": "TILES_BATH_WALL_BASE",
+      "name": "Base bath_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_KITCHEN_WALL_BASE",
+      "code": "TILES_KITCHEN_WALL_BASE",
+      "name": "Base kitchen_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_PORTICO_BASE",
+      "code": "TILES_PORTICO_BASE",
+      "name": "Base portico tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CONSTRUCTION_STANDARD",
+      "code": "CONSTRUCTION_STANDARD",
+      "name": "Standard construction",
+      "category": "Construction",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CEMENT_STANDARD",
+      "code": "CEMENT_STANDARD",
+      "name": "Standard cement",
+      "category": "CEMENT",
+      "unit": "Bags"
+    },
+    {
+      "id": "STEEL_STANDARD",
+      "code": "STEEL_STANDARD",
+      "name": "Standard steel",
+      "category": "STEEL",
+      "unit": "Kg"
+    },
+    {
+      "id": "WINDOW_STANDARD",
+      "code": "WINDOW_STANDARD",
+      "name": "Standard window",
+      "category": "WINDOW",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_FLOOR_STANDARD",
+      "code": "TILES_FLOOR_STANDARD",
+      "name": "Standard floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_FLOOR_STANDARD",
+      "code": "TILES_BATH_FLOOR_STANDARD",
+      "name": "Standard bath_floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_WALL_STANDARD",
+      "code": "TILES_BATH_WALL_STANDARD",
+      "name": "Standard bath_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_KITCHEN_WALL_STANDARD",
+      "code": "TILES_KITCHEN_WALL_STANDARD",
+      "name": "Standard kitchen_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_PORTICO_STANDARD",
+      "code": "TILES_PORTICO_STANDARD",
+      "name": "Standard portico tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CONSTRUCTION_PREMIUM",
+      "code": "CONSTRUCTION_PREMIUM",
+      "name": "Premium construction",
+      "category": "Construction",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CEMENT_PREMIUM",
+      "code": "CEMENT_PREMIUM",
+      "name": "Premium cement",
+      "category": "CEMENT",
+      "unit": "Bags"
+    },
+    {
+      "id": "STEEL_PREMIUM",
+      "code": "STEEL_PREMIUM",
+      "name": "Premium steel",
+      "category": "STEEL",
+      "unit": "Kg"
+    },
+    {
+      "id": "WINDOW_PREMIUM",
+      "code": "WINDOW_PREMIUM",
+      "name": "Premium window",
+      "category": "WINDOW",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_FLOOR_PREMIUM",
+      "code": "TILES_FLOOR_PREMIUM",
+      "name": "Premium floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_FLOOR_PREMIUM",
+      "code": "TILES_BATH_FLOOR_PREMIUM",
+      "name": "Premium bath_floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_WALL_PREMIUM",
+      "code": "TILES_BATH_WALL_PREMIUM",
+      "name": "Premium bath_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_KITCHEN_WALL_PREMIUM",
+      "code": "TILES_KITCHEN_WALL_PREMIUM",
+      "name": "Premium kitchen_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_PORTICO_PREMIUM",
+      "code": "TILES_PORTICO_PREMIUM",
+      "name": "Premium portico tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CONSTRUCTION_LUXURY",
+      "code": "CONSTRUCTION_LUXURY",
+      "name": "Luxury construction",
+      "category": "Construction",
+      "unit": "Sqft"
+    },
+    {
+      "id": "CEMENT_LUXURY",
+      "code": "CEMENT_LUXURY",
+      "name": "Luxury cement",
+      "category": "CEMENT",
+      "unit": "Bags"
+    },
+    {
+      "id": "STEEL_LUXURY",
+      "code": "STEEL_LUXURY",
+      "name": "Luxury steel",
+      "category": "STEEL",
+      "unit": "Kg"
+    },
+    {
+      "id": "WINDOW_LUXURY",
+      "code": "WINDOW_LUXURY",
+      "name": "Luxury window",
+      "category": "WINDOW",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_FLOOR_LUXURY",
+      "code": "TILES_FLOOR_LUXURY",
+      "name": "Luxury floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_FLOOR_LUXURY",
+      "code": "TILES_BATH_FLOOR_LUXURY",
+      "name": "Luxury bath_floor tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_BATH_WALL_LUXURY",
+      "code": "TILES_BATH_WALL_LUXURY",
+      "name": "Luxury bath_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_KITCHEN_WALL_LUXURY",
+      "code": "TILES_KITCHEN_WALL_LUXURY",
+      "name": "Luxury kitchen_wall tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "TILES_PORTICO_LUXURY",
+      "code": "TILES_PORTICO_LUXURY",
+      "name": "Luxury portico tiles",
+      "category": "Flooring",
+      "unit": "Sqft"
+    },
+    {
+      "id": "WALL_AAC_BLOCKS",
+      "code": "WALL_AAC_BLOCKS",
+      "name": "AAC Blocks",
+      "category": "WALL",
+      "unit": "Nos"
+    },
+    {
+      "id": "WALL_RED_CLAY_BRICKS",
+      "code": "WALL_RED_CLAY_BRICKS",
+      "name": "Red Clay Bricks",
+      "category": "WALL",
+      "unit": "Nos"
+    },
+    {
+      "id": "WALL_CONCRETE_SOLID_BLOCKS",
+      "code": "WALL_CONCRETE_SOLID_BLOCKS",
+      "name": "Concrete Solid Blocks",
+      "category": "WALL",
+      "unit": "Nos"
+    },
+    {
+      "id": "WALL_FLY_ASH_BRICKS",
+      "code": "WALL_FLY_ASH_BRICKS",
+      "name": "Fly Ash Bricks",
+      "category": "WALL",
+      "unit": "Nos"
+    },
+    {
+      "id": "SAND_M_SAND",
+      "code": "SAND_M_SAND",
+      "name": "M Sand",
+      "category": "SAND",
+      "unit": "Cft"
+    },
+    {
+      "id": "SAND_P_SAND",
+      "code": "SAND_P_SAND",
+      "name": "P Sand",
+      "category": "SAND",
+      "unit": "Cft"
+    },
+    {
+      "id": "SAND_RIVER_SAND",
+      "code": "SAND_RIVER_SAND",
+      "name": "River Sand",
+      "category": "SAND",
+      "unit": "Cft"
+    },
+    {
+      "id": "AGGREGATE_40MM",
+      "code": "AGGREGATE_40MM",
+      "name": "40 mm Aggregate",
+      "category": "AGGREGATE",
+      "unit": "Cft"
+    },
+    {
+      "id": "AGGREGATE_20MM",
+      "code": "AGGREGATE_20MM",
+      "name": "20 mm Aggregate",
+      "category": "AGGREGATE",
+      "unit": "Cft"
+    },
+    {
+      "id": "AGGREGATE_12MM",
+      "code": "AGGREGATE_12MM",
+      "name": "12 mm Aggregate",
+      "category": "AGGREGATE",
+      "unit": "Cft"
+    }
+  ],
+  "material_rates": [
+    {
+      "id": "sample-CONSTRUCTION_BASE",
+      "city": "Default",
+      "material_code": "CONSTRUCTION_BASE",
+      "rate": 2100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CEMENT_BASE",
+      "city": "Default",
+      "material_code": "CEMENT_BASE",
+      "rate": 400,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-STEEL_BASE",
+      "city": "Default",
+      "material_code": "STEEL_BASE",
+      "rate": 70,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WINDOW_BASE",
+      "city": "Default",
+      "material_code": "WINDOW_BASE",
+      "rate": 500,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_FLOOR_BASE",
+      "city": "Default",
+      "material_code": "TILES_FLOOR_BASE",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_FLOOR_BASE",
+      "city": "Default",
+      "material_code": "TILES_BATH_FLOOR_BASE",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_WALL_BASE",
+      "city": "Default",
+      "material_code": "TILES_BATH_WALL_BASE",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_KITCHEN_WALL_BASE",
+      "city": "Default",
+      "material_code": "TILES_KITCHEN_WALL_BASE",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_PORTICO_BASE",
+      "city": "Default",
+      "material_code": "TILES_PORTICO_BASE",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CONSTRUCTION_STANDARD",
+      "city": "Default",
+      "material_code": "CONSTRUCTION_STANDARD",
+      "rate": 2400,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CEMENT_STANDARD",
+      "city": "Default",
+      "material_code": "CEMENT_STANDARD",
+      "rate": 400,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-STEEL_STANDARD",
+      "city": "Default",
+      "material_code": "STEEL_STANDARD",
+      "rate": 70,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WINDOW_STANDARD",
+      "city": "Default",
+      "material_code": "WINDOW_STANDARD",
+      "rate": 500,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_FLOOR_STANDARD",
+      "city": "Default",
+      "material_code": "TILES_FLOOR_STANDARD",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_FLOOR_STANDARD",
+      "city": "Default",
+      "material_code": "TILES_BATH_FLOOR_STANDARD",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_WALL_STANDARD",
+      "city": "Default",
+      "material_code": "TILES_BATH_WALL_STANDARD",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_KITCHEN_WALL_STANDARD",
+      "city": "Default",
+      "material_code": "TILES_KITCHEN_WALL_STANDARD",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_PORTICO_STANDARD",
+      "city": "Default",
+      "material_code": "TILES_PORTICO_STANDARD",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CONSTRUCTION_PREMIUM",
+      "city": "Default",
+      "material_code": "CONSTRUCTION_PREMIUM",
+      "rate": 2600,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CEMENT_PREMIUM",
+      "city": "Default",
+      "material_code": "CEMENT_PREMIUM",
+      "rate": 400,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-STEEL_PREMIUM",
+      "city": "Default",
+      "material_code": "STEEL_PREMIUM",
+      "rate": 70,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WINDOW_PREMIUM",
+      "city": "Default",
+      "material_code": "WINDOW_PREMIUM",
+      "rate": 500,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_FLOOR_PREMIUM",
+      "city": "Default",
+      "material_code": "TILES_FLOOR_PREMIUM",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_FLOOR_PREMIUM",
+      "city": "Default",
+      "material_code": "TILES_BATH_FLOOR_PREMIUM",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_WALL_PREMIUM",
+      "city": "Default",
+      "material_code": "TILES_BATH_WALL_PREMIUM",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_KITCHEN_WALL_PREMIUM",
+      "city": "Default",
+      "material_code": "TILES_KITCHEN_WALL_PREMIUM",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_PORTICO_PREMIUM",
+      "city": "Default",
+      "material_code": "TILES_PORTICO_PREMIUM",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CONSTRUCTION_LUXURY",
+      "city": "Default",
+      "material_code": "CONSTRUCTION_LUXURY",
+      "rate": 2800,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-CEMENT_LUXURY",
+      "city": "Default",
+      "material_code": "CEMENT_LUXURY",
+      "rate": 400,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-STEEL_LUXURY",
+      "city": "Default",
+      "material_code": "STEEL_LUXURY",
+      "rate": 70,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WINDOW_LUXURY",
+      "city": "Default",
+      "material_code": "WINDOW_LUXURY",
+      "rate": 500,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_FLOOR_LUXURY",
+      "city": "Default",
+      "material_code": "TILES_FLOOR_LUXURY",
+      "rate": 100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_FLOOR_LUXURY",
+      "city": "Default",
+      "material_code": "TILES_BATH_FLOOR_LUXURY",
+      "rate": 100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_BATH_WALL_LUXURY",
+      "city": "Default",
+      "material_code": "TILES_BATH_WALL_LUXURY",
+      "rate": 100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_KITCHEN_WALL_LUXURY",
+      "city": "Default",
+      "material_code": "TILES_KITCHEN_WALL_LUXURY",
+      "rate": 100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-TILES_PORTICO_LUXURY",
+      "city": "Default",
+      "material_code": "TILES_PORTICO_LUXURY",
+      "rate": 100,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WALL_AAC_BLOCKS",
+      "city": "Default",
+      "material_code": "WALL_AAC_BLOCKS",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WALL_RED_CLAY_BRICKS",
+      "city": "Default",
+      "material_code": "WALL_RED_CLAY_BRICKS",
+      "rate": 12,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WALL_CONCRETE_SOLID_BLOCKS",
+      "city": "Default",
+      "material_code": "WALL_CONCRETE_SOLID_BLOCKS",
+      "rate": 45,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-WALL_FLY_ASH_BRICKS",
+      "city": "Default",
+      "material_code": "WALL_FLY_ASH_BRICKS",
+      "rate": 10,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-SAND_M_SAND",
+      "city": "Default",
+      "material_code": "SAND_M_SAND",
+      "rate": 60,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-SAND_P_SAND",
+      "city": "Default",
+      "material_code": "SAND_P_SAND",
+      "rate": 65,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-SAND_RIVER_SAND",
+      "city": "Default",
+      "material_code": "SAND_RIVER_SAND",
+      "rate": 80,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-AGGREGATE_40MM",
+      "city": "Default",
+      "material_code": "AGGREGATE_40MM",
+      "rate": 50,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-AGGREGATE_20MM",
+      "city": "Default",
+      "material_code": "AGGREGATE_20MM",
+      "rate": 52,
+      "vendor": "Illustrative test data"
+    },
+    {
+      "id": "sample-AGGREGATE_12MM",
+      "city": "Default",
+      "material_code": "AGGREGATE_12MM",
+      "rate": 55,
+      "vendor": "Illustrative test data"
+    }
+  ],
+  "system_settings": [
+    {
+      "id": "setting-contingency_pct",
+      "key": "contingency_pct",
+      "value": "5"
+    },
+    {
+      "id": "setting-rate_package_base",
+      "key": "rate_package_base",
+      "value": "2100"
+    },
+    {
+      "id": "setting-rate_package_standard",
+      "key": "rate_package_standard",
+      "value": "2400"
+    },
+    {
+      "id": "setting-rate_package_premium",
+      "key": "rate_package_premium",
+      "value": "2600"
+    },
+    {
+      "id": "setting-rate_package_luxury",
+      "key": "rate_package_luxury",
+      "value": "2800"
+    },
+    {
+      "id": "setting-rate_compound_wall",
+      "key": "rate_compound_wall",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_water_tank",
+      "key": "rate_water_tank",
+      "value": "5"
+    },
+    {
+      "id": "setting-rate_septic_tank",
+      "key": "rate_septic_tank",
+      "value": "8"
+    },
+    {
+      "id": "setting-rate_front_elevation",
+      "key": "rate_front_elevation",
+      "value": "120"
+    },
+    {
+      "id": "setting-rate_interior",
+      "key": "rate_interior",
+      "value": "150"
+    },
+    {
+      "id": "setting-rate_open_portico",
+      "key": "rate_open_portico",
+      "value": "800"
+    },
+    {
+      "id": "setting-rate_upper_water_tank_500l",
+      "key": "rate_upper_water_tank_500l",
+      "value": "3000"
+    },
+    {
+      "id": "setting-rate_upper_water_tank_1000l",
+      "key": "rate_upper_water_tank_1000l",
+      "value": "6000"
+    },
+    {
+      "id": "setting-rate_upper_water_tank_1500l",
+      "key": "rate_upper_water_tank_1500l",
+      "value": "8500"
+    },
+    {
+      "id": "setting-rate_upper_water_tank_2000l",
+      "key": "rate_upper_water_tank_2000l",
+      "value": "11000"
+    },
+    {
+      "id": "setting-rate_false_ceiling_base",
+      "key": "rate_false_ceiling_base",
+      "value": "10"
+    },
+    {
+      "id": "setting-rate_false_ceiling_standard",
+      "key": "rate_false_ceiling_standard",
+      "value": "15"
+    },
+    {
+      "id": "setting-rate_false_ceiling_premium",
+      "key": "rate_false_ceiling_premium",
+      "value": "20"
+    },
+    {
+      "id": "setting-rate_false_ceiling_luxury",
+      "key": "rate_false_ceiling_luxury",
+      "value": "25"
+    },
+    {
+      "id": "setting-rate_wardrobe_quality1",
+      "key": "rate_wardrobe_quality1",
+      "value": "260"
+    },
+    {
+      "id": "setting-rate_wardrobe_quality2",
+      "key": "rate_wardrobe_quality2",
+      "value": "280"
+    },
+    {
+      "id": "setting-rate_wardrobe_quality3",
+      "key": "rate_wardrobe_quality3",
+      "value": "300"
+    },
+    {
+      "id": "setting-rate_wardrobe_quality4",
+      "key": "rate_wardrobe_quality4",
+      "value": "320"
+    },
+    {
+      "id": "setting-rate_wardrobe_wood_quality1",
+      "key": "rate_wardrobe_wood_quality1",
+      "value": "330"
+    },
+    {
+      "id": "setting-rate_wardrobe_wood_quality2",
+      "key": "rate_wardrobe_wood_quality2",
+      "value": "340"
+    },
+    {
+      "id": "setting-rate_wardrobe_wood_quality3",
+      "key": "rate_wardrobe_wood_quality3",
+      "value": "350"
+    },
+    {
+      "id": "setting-rate_wardrobe_wood_quality4",
+      "key": "rate_wardrobe_wood_quality4",
+      "value": "360"
+    },
+    {
+      "id": "setting-rate_gate_base",
+      "key": "rate_gate_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_gate_standard",
+      "key": "rate_gate_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_gate_premium",
+      "key": "rate_gate_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_gate_luxury",
+      "key": "rate_gate_luxury",
+      "value": "90"
+    },
+    {
+      "id": "setting-rate_tiles_floor_base",
+      "key": "rate_tiles_floor_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_tiles_floor_standard",
+      "key": "rate_tiles_floor_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_tiles_floor_premium",
+      "key": "rate_tiles_floor_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_tiles_floor_luxury",
+      "key": "rate_tiles_floor_luxury",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_tiles_bath_floor_base",
+      "key": "rate_tiles_bath_floor_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_tiles_bath_floor_standard",
+      "key": "rate_tiles_bath_floor_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_tiles_bath_floor_premium",
+      "key": "rate_tiles_bath_floor_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_tiles_bath_floor_luxury",
+      "key": "rate_tiles_bath_floor_luxury",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_tiles_bath_wall_base",
+      "key": "rate_tiles_bath_wall_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_tiles_bath_wall_standard",
+      "key": "rate_tiles_bath_wall_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_tiles_bath_wall_premium",
+      "key": "rate_tiles_bath_wall_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_tiles_bath_wall_luxury",
+      "key": "rate_tiles_bath_wall_luxury",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_tiles_kitchen_wall_base",
+      "key": "rate_tiles_kitchen_wall_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_tiles_kitchen_wall_standard",
+      "key": "rate_tiles_kitchen_wall_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_tiles_kitchen_wall_premium",
+      "key": "rate_tiles_kitchen_wall_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_tiles_kitchen_wall_luxury",
+      "key": "rate_tiles_kitchen_wall_luxury",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_tiles_portico_base",
+      "key": "rate_tiles_portico_base",
+      "value": "50"
+    },
+    {
+      "id": "setting-rate_tiles_portico_standard",
+      "key": "rate_tiles_portico_standard",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_tiles_portico_premium",
+      "key": "rate_tiles_portico_premium",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_tiles_portico_luxury",
+      "key": "rate_tiles_portico_luxury",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_modular_kitchen_base",
+      "key": "rate_modular_kitchen_base",
+      "value": "20"
+    },
+    {
+      "id": "setting-rate_modular_kitchen_standard",
+      "key": "rate_modular_kitchen_standard",
+      "value": "25"
+    },
+    {
+      "id": "setting-rate_modular_kitchen_premium",
+      "key": "rate_modular_kitchen_premium",
+      "value": "30"
+    },
+    {
+      "id": "setting-rate_modular_kitchen_luxury",
+      "key": "rate_modular_kitchen_luxury",
+      "value": "40"
+    },
+    {
+      "id": "setting-rate_surkhi_base",
+      "key": "rate_surkhi_base",
+      "value": "60"
+    },
+    {
+      "id": "setting-rate_surkhi_standard",
+      "key": "rate_surkhi_standard",
+      "value": "80"
+    },
+    {
+      "id": "setting-rate_surkhi_premium",
+      "key": "rate_surkhi_premium",
+      "value": "100"
+    },
+    {
+      "id": "setting-rate_surkhi_luxury",
+      "key": "rate_surkhi_luxury",
+      "value": "120"
+    },
+    {
+      "id": "setting-include_compound_wall_base",
+      "key": "include_compound_wall_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_compound_wall_standard",
+      "key": "include_compound_wall_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_compound_wall_premium",
+      "key": "include_compound_wall_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_compound_wall_luxury",
+      "key": "include_compound_wall_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_gate_base",
+      "key": "include_gate_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_gate_standard",
+      "key": "include_gate_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_gate_premium",
+      "key": "include_gate_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_gate_luxury",
+      "key": "include_gate_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_water_tank_base",
+      "key": "include_water_tank_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_water_tank_standard",
+      "key": "include_water_tank_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_water_tank_premium",
+      "key": "include_water_tank_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_water_tank_luxury",
+      "key": "include_water_tank_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_upper_water_tank_base",
+      "key": "include_upper_water_tank_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_upper_water_tank_standard",
+      "key": "include_upper_water_tank_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_upper_water_tank_premium",
+      "key": "include_upper_water_tank_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_upper_water_tank_luxury",
+      "key": "include_upper_water_tank_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_septic_tank_base",
+      "key": "include_septic_tank_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_septic_tank_standard",
+      "key": "include_septic_tank_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_septic_tank_premium",
+      "key": "include_septic_tank_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_septic_tank_luxury",
+      "key": "include_septic_tank_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_front_elevation_base",
+      "key": "include_front_elevation_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_front_elevation_standard",
+      "key": "include_front_elevation_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_front_elevation_premium",
+      "key": "include_front_elevation_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_front_elevation_luxury",
+      "key": "include_front_elevation_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_false_ceiling_base",
+      "key": "include_false_ceiling_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_false_ceiling_standard",
+      "key": "include_false_ceiling_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_false_ceiling_premium",
+      "key": "include_false_ceiling_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_false_ceiling_luxury",
+      "key": "include_false_ceiling_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_wardrobes_base",
+      "key": "include_wardrobes_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_wardrobes_standard",
+      "key": "include_wardrobes_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_wardrobes_premium",
+      "key": "include_wardrobes_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_wardrobes_luxury",
+      "key": "include_wardrobes_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_modular_kitchen_base",
+      "key": "include_modular_kitchen_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_modular_kitchen_standard",
+      "key": "include_modular_kitchen_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_modular_kitchen_premium",
+      "key": "include_modular_kitchen_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_modular_kitchen_luxury",
+      "key": "include_modular_kitchen_luxury",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_surkhi_base",
+      "key": "include_surkhi_base",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_surkhi_standard",
+      "key": "include_surkhi_standard",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_surkhi_premium",
+      "key": "include_surkhi_premium",
+      "value": "false"
+    },
+    {
+      "id": "setting-include_surkhi_luxury",
+      "key": "include_surkhi_luxury",
+      "value": "false"
+    }
+  ],
+  "city_indexes": [
+    {
+      "id": "coimbatore",
+      "city": "Coimbatore",
+      "state": "Tamil Nadu",
+      "cost_index": 1
+    }
+  ]
+}

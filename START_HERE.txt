@@ -1,0 +1,44 @@
+BuildSmart 360 v1.8
+===================
+
+Start here
+----------
+1. Extract the ZIP into a new folder.
+2. Open "Edit Settings.cmd". It opens the included .env in Notepad.
+3. Replace the Google and Brevo placeholders with your own values. Save.
+4. Open "Start BuildSmart.cmd" to launch. You can also run python run.py
+   from this folder. Python 3.11 or newer is required. The first run
+   installs dependencies and opens BuildSmart in your browser.
+
+Google and email
+----------------
+Use the Google OAuth web client ID and secret you created. For a local launch
+on port 5000, register http://127.0.0.1:5000/setup/google/callback in Google
+Cloud. Open Connect Google Sheets in BuildSmart and sign in.
+
+For Brevo, enter the API key and the verified sender email address. For a
+local preview, leave credentials as placeholders and continue from setup.
+
+Run python run.py --check to see which settings the launcher sees.
+Restart BuildSmart when you edit .env. Press Ctrl+C to stop it.
+
+Upgrading an existing installation
+----------------------------------
+Stop the old copy before moving anything. Extract this release into a new
+folder so its placeholder .env does not replace yours. Copy your old data
+folder into the new BuildSmart folder. If you use a custom BUILDSMART_DATA_DIR,
+keep pointing .env to that directory. Copy your private settings to the new
+.env or bring over your existing .env. Keep your original data as a backup.
+A production deployment still starts with python run.py --production.
+
+Files in this folder
+--------------------
+Start BuildSmart.cmd   Opens the application on Windows.
+Edit Settings.cmd      Opens .env directly in Notepad.
+.env                   Your local Google, Brevo and optional AI settings.
+run.py                 Main Python entry point.
+app/                   The application, web interface and sample data.
+data/                  Created when the app runs. Contains your local data.
+docs/                  Reference and production deployment instructions.
+
+See docs/REFERENCE.md for advanced settings and deployment.
