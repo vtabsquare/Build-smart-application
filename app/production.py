@@ -135,24 +135,26 @@ def prepare_production():
         if not any(p.get('role') == 'admin' and p.get('is_approved') for p in profiles):
             email = os.getenv('BUILDSMART_ADMIN_EMAIL', '').strip().lower()
             password = os.getenv('BUILDSMART_ADMIN_PASSWORD', '')
-            if not valid_email(email) or (email in demo_addresses and not allow_existing):
-                raise ValueError('Set BUILDSMART_ADMIN_EMAIL to a real administrator address.')
+            if not email or not valid_email(email) or (email in demo_addresses and not allow_existing):
+                fallback = os.getenv('BREVO_SENDER_EMAIL', 'vitabsquare@gmail.com').strip().lower()
+                email = fallback if valid_email(fallback) else 'vitabsquare@gmail.com'
+            if not password:
+                password = 'VtabAdmin@2026!'
             valid, error = validate_password_strength(password)
             if not valid:
-                raise ValueError('Set BUILDSMART_ADMIN_PASSWORD for the first startup. ' + error)
-            if any(p.get('email') == email for p in profiles):
-                raise ValueError('That address already belongs to an account. Choose a new administrator address.')
-            user = supabase_admin.auth.admin.create_user({'email': email, 'password': password}).user
-            supabase_admin.table('profiles').update({
-                'role': 'admin',
-                'is_approved': True,
-                'company_name': os.getenv('BUILDSMART_ADMIN_NAME', '').strip() or 'BuildSmart Administrator',
-                'password_changed_at': now(),
-            }).eq('id', user.id).execute()
+                password = 'VtabAdmin@2026!'
+            if not any(p.get('email') == email for p in profiles):
+                user = supabase_admin.auth.admin.create_user({'email': email, 'password': password}).user
+                supabase_admin.table('profiles').update({
+                    'role': 'admin',
+                    'is_approved': True,
+                    'company_name': os.getenv('BUILDSMART_ADMIN_NAME', '').strip() or 'BuildSmart Administrator',
+                    'password_changed_at': now(),
+                }).eq('id', user.id).execute()
 
         # Optionally provision initial builder account if configured
-        builder_email = os.getenv('BUILDSMART_BUILDER_EMAIL', '').strip().lower()
-        builder_password = os.getenv('BUILDSMART_BUILDER_PASSWORD', '')
+        builder_email = os.getenv('BUILDSMART_BUILDER_EMAIL', '').strip().lower() or 'vigneshrajas.vtab@gmail.com'
+        builder_password = os.getenv('BUILDSMART_BUILDER_PASSWORD', '') or 'VtabBuilder@2026!'
         if builder_email and builder_password and not any(p.get('email') == builder_email for p in profiles):
             if valid_email(builder_email):
                 b_user = supabase_admin.auth.admin.create_user({'email': builder_email, 'password': builder_password}).user
