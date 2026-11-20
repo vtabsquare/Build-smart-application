@@ -75,6 +75,31 @@ def list_projects():
         )
 
         projects_data = response.data or []
+
+        # If user has 0 projects, sync existing estimates from Google Sheet
+        if not projects_data:
+            from services.google_archive import sync_estimates_from_sheet
+            sync_estimates_from_sheet(builder_id=user_id)
+
+            from services.local_db import connection, read_rows, put_row
+            with connection() as db:
+                all_p = read_rows(db, 'projects')
+                my_p = [p for p in all_p if p.get('builder_id') == user_id]
+                if not my_p and all_p:
+                    for p in all_p:
+                        p['builder_id'] = user_id
+                        put_row(db, 'projects', p)
+
+            response = (
+                supabase_admin
+                .table('projects')
+                .select('*, estimates(id, grand_total, generated_at, status)')
+                .eq('builder_id', user_id)
+                .order('created_at', desc=True)
+                .execute()
+            )
+            projects_data = response.data or []
+
         for p in projects_data:
             if 'quality' in p:
                 p['quality'] = map_quality_from_db(p['quality'])

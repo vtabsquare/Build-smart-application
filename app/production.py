@@ -221,7 +221,7 @@ def prepare_production():
 
         # Auto-archive any pending estimates to Google Sheets & Drive
         try:
-            from services.google_archive import archive_estimate
+            from services.google_archive import archive_estimate, sync_estimates_from_sheet
             estimates = read_rows(db, 'estimates')
             projects = read_rows(db, 'projects')
             for est in estimates:
@@ -230,8 +230,10 @@ def prepare_production():
                     proj = next((p for p in projects if p.get('id') == est.get('project_id')), {'name': 'Project'})
                     b_prof = next((p for p in profiles if p.get('id') == proj.get('builder_id')), {'company_name': 'Vtab square'})
                     archive_estimate(est['id'], proj, b_prof)
+            # Sync existing estimates from Google Sheets
+            sync_estimates_from_sheet()
         except Exception as e:
-            print(f'Warning: pending estimate archive sync: {e}', flush=True)
+            print(f'Warning: Google Sheets sync on startup: {e}', flush=True)
 
     return source
 

@@ -105,3 +105,117 @@ def archive_estimate(estimate_id, project, builder):
         archive['status'] = 'archived'
         store(estimate_id, archive)
         return archive
+
+def sync_estimates_from_sheet(builder_id=None):
+    """Sync estimates and projects from connected Google Sheet into local SQLite."""
+    try:
+        config = metadata('source_config') or {}
+        conn = google_setup.get_connection()
+        spreadsheet_id = os.getenv('BUILDSMART_SHEET_ID') or config.get('spreadsheet_id') or conn.get('sheet_id')
+        if not spreadsheet_id or not conn.get('refresh_token'):
+            return 0
+
+        with google_setup.sheets_session() as client:
+            resp = client.get(
+                f"{google_setup.SHEETS_URL}/{spreadsheet_id}/values/{TAB}!A2:F",
+                timeout=TIMEOUT
+            )
+            if not resp.ok:
+                return 0
+            rows = resp.json().get('values', [])
+            if not rows:
+                return 0
+
+        from services.local_db import connection, read_rows, put_row, now
+        with connection() as db:
+            profiles = read_rows(db, 'profiles')
+            if not builder_id:
+                builder_prof = next((p for p in profiles if p.get('role') == 'builder' and 'test' not in p.get('email', '')), None)
+                if not builder_prof:
+                    builder_prof = next((p for p in profiles if p.get('role') == 'builder'), profiles[0] if profiles else {})
+                target_builder_id = builder_prof.get('id', 'default-builder')
+            else:
+                target_builder_id = builder_id
+
+            existing_estimates = {e['id']: e for e in read_rows(db, 'estimates')}
+            all_projects = {p['id']: p for p in read_rows(db, 'projects')}
+            existing_projects_by_name = {p['name'].lower(): p for p in all_projects.values()}
+
+            synced_count = 0
+            for row in rows:
+                if not row or not row[0]:
+                    continue
+                est_id = str(row[0]).strip()
+                proj_name = str(row[1]).strip() if len(row) > 1 and str(row[1]).strip() else 'Untitled Project'
+                cust_name = str(row[2]).strip() if len(row) > 2 else ''
+                created_at = str(row[3]).strip() if len(row) > 3 and str(row[3]).strip() else now()
+                try:
+                    total_val = float(str(row[4]).replace(',', '')) if len(row) > 4 and str(row[4]).replace(',', '').strip() else 0.0
+                except (ValueError, TypeError):
+                    total_val = 0.0
+                pdf_url = str(row[5]).strip() if len(row) > 5 else ''
+
+                if est_id not in existing_estimates:
+                    proj = existing_projects_by_name.get(proj_name.lower())
+                    if not proj:
+                        proj_id = str(uuid.uuid4())
+                        proj = {
+                            'id': proj_id,
+                            'builder_id': target_builder_id,
+                            'name': proj_name,
+                            'location': 'Coimbatore',
+                            'building_type': 'Residential Villa',
+                            'total_sqft': 1000,
+                            'quality': 'Standard',
+                            'customer_name': cust_name,
+                            'created_at': created_at,
+                            'status': 'Draft'
+                        }
+                        put_row(db, 'projects', proj)
+                        existing_projects_by_name[proj_name.lower()] = proj
+                        all_projects[proj_id] = proj
+                    else:
+                        proj_id = proj['id']
+
+                    est = {
+                        'id': est_id,
+                        'project_id': proj_id,
+                        'version': 1,
+                        'subtotal': total_val * 0.95,
+                        'contingency_pct': 5.0,
+                        'contingency_amount': total_val * 0.05,
+                        'grand_total': total_val,
+                        'generated_at': created_at,
+                        'status': 'Draft',
+                        'google_archive': {
+                            'status': 'archived',
+                            'pdf_url': pdf_url,
+                            'spreadsheet_id': spreadsheet_id
+                        },
+                        'input_json': {'customer_name': cust_name, 'name': proj_name, 'builtup_area_sqft': 1000, 'city': 'Coimbatore'},
+                        'output_json': {
+                            'costs': {'subtotal': total_val * 0.95, 'contingency': total_val * 0.05, 'grandTotal': total_val},
+                            'duration': {'min': 3, 'max': 5},
+                            'summary': {'customerName': cust_name or proj_name, 'location': 'Coimbatore', 'totalSqft': 1000, 'quality': 'Standard'}
+                        }
+                    }
+                    put_row(db, 'estimates', est)
+                    existing_estimates[est_id] = est
+                    synced_count += 1
+                else:
+                    if target_builder_id:
+                        est = existing_estimates[est_id]
+                        proj_id = est.get('project_id')
+                        proj = all_projects.get(proj_id)
+                        if proj and proj.get('builder_id') != target_builder_id:
+                            user_proj_count = sum(1 for p in all_projects.values() if p.get('builder_id') == target_builder_id)
+                            if user_proj_count == 0:
+                                proj['builder_id'] = target_builder_id
+                                put_row(db, 'projects', proj)
+                                all_projects[proj_id] = proj
+
+            return synced_count
+    except Exception as exc:
+        print(f"sync_estimates_from_sheet error: {exc}", flush=True)
+        return 0
+
