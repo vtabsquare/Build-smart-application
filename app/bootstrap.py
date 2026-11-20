@@ -29,8 +29,6 @@ def configure_requested_login():
         db.execute('INSERT INTO metadata VALUES(?,?)', (LOGIN_MIGRATION, json.dumps(True)))
 
 def bootstrap():
-    if metadata('production_initialized', False):
-        raise SystemExit('This data directory belongs to a production installation. Start with --production.')
     configure_requested_login()
     print('Your local Builder login is ready:', REQUESTED_EMAIL)
     created=[]
