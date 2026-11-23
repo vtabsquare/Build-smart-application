@@ -1,5 +1,6 @@
 import Icon from '../../components/Icon';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from '../../router';
 import Layout from '../../components/layout/Layout';
 import { formatINR, estimatesAPI, API_BASE_URL, isDemoMode, getCurrentUser, checkDemoDownloadStatus } from '../../services/api';
@@ -1609,21 +1610,39 @@ export default function EstimateResult() {
       </div>
 
       {/* Demo Notice / Contact Modal */}
-      {demoContactModal && (
+      {demoContactModal && typeof document !== 'undefined' && createPortal(
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: '20px'
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(15, 23, 42, 0.72)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999999,
+          padding: '20px',
+          boxSizing: 'border-box'
         }}>
           <div style={{
-            background: 'white', borderRadius: '16px', maxWidth: '520px', width: '100%',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
-            animation: 'fadeIn 0.2s ease-out'
+            background: 'white',
+            borderRadius: '16px',
+            maxWidth: '520px',
+            width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)',
+            overflow: 'hidden',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             <div style={{
               padding: '20px 24px', background: 'linear-gradient(135deg, #0f766e 0%, #0f172a 100%)',
-              color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
@@ -1645,7 +1664,7 @@ export default function EstimateResult() {
               </button>
             </div>
 
-            <div style={{ padding: '24px' }}>
+            <div style={{ padding: '24px', overflowY: 'auto' }}>
               <div style={{
                 background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px',
                 padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px'
@@ -1698,7 +1717,8 @@ export default function EstimateResult() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </Layout>
   );
