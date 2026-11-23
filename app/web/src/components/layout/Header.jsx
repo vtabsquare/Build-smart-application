@@ -35,6 +35,12 @@ export default function Header({ role = 'user', onHamburgerClick }) {
   const [showIframeModal, setShowIframeModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const isDemo = (isDemoMode() || user?.email === 'vtabpublicuser@gmail.com') && role !== 'admin';
+  const realUser = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('bs_user') || 'null');
+      return (u && u.email !== 'vtabpublicuser@gmail.com') ? u : null;
+    } catch { return null; }
+  })();
   const canExtractIframe = role === 'admin' && !isDemo;
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
   const windowWidth = useWindowWidth();
@@ -119,6 +125,36 @@ export default function Header({ role = 'user', onHamburgerClick }) {
           >
             {isDemo ? 'Public Demo' : role === 'admin' ? 'Admin workspace' : 'Builder workspace'}
           </span>
+        )}
+
+        {/* Exit demo button for real accounts who opened demo link */}
+        {isDemo && realUser && !isInIframe && (
+          <button
+            className="btn btn-sm"
+            onClick={() => {
+              sessionStorage.removeItem('bs_is_demo');
+              sessionStorage.removeItem('bs_demo_token');
+              sessionStorage.removeItem('bs_demo_user');
+              navigate(realUser.role === 'admin' ? '/admin' : '/dashboard');
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: '600',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              color: '#dc2626',
+              cursor: 'pointer'
+            }}
+            title={`Exit demo session and return to ${realUser.role === 'admin' ? 'Admin' : 'Builder'} workspace`}
+          >
+            <Icon name="logout" size={14} />
+            {!isSmall && <span>Exit Demo</span>}
+          </button>
         )}
 
         {/* User avatar */}
@@ -265,7 +301,7 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                 </button>
                 <button
                   onClick={() => {
-                    window.open(`${window.location.origin}/demo`, '_blank');
+                    window.open(`${window.location.origin}/demo`, '_blank', 'noopener');
                   }}
                   style={{
                     padding: '10px 22px', borderRadius: '8px', border: 'none',

@@ -31,16 +31,18 @@ export function isDemoMode() {
     return true;
   }
 
-  // Top-level window without demo params:
-  // If user is a real logged-in account (e.g. vitabsquare@gmail.com or vigneshrajas.vtab@gmail.com), clear demo flag
-  try {
-    const realUser = JSON.parse(localStorage.getItem('bs_user') || 'null');
-    if (realUser && realUser.email !== 'vtabpublicuser@gmail.com') {
-      sessionStorage.removeItem('bs_is_demo');
-      return false;
-    }
-  } catch {}
+  // If navigating to an admin route with a real admin account, exit demo mode
+  if (window.location.pathname.startsWith('/admin')) {
+    try {
+      const realUser = JSON.parse(localStorage.getItem('bs_user') || 'null');
+      if (realUser && realUser.role === 'admin') {
+        sessionStorage.removeItem('bs_is_demo');
+        return false;
+      }
+    } catch {}
+  }
 
+  // If this tab was launched as a demo session, keep demo mode active across demo pages
   return sessionStorage.getItem('bs_is_demo') === 'true';
 }
 
@@ -92,7 +94,6 @@ export function getToken() {
   if (isDemoMode()) {
     return (
       sessionStorage.getItem('bs_demo_token') ||
-      sessionStorage.getItem('bs_token') ||
       localStorage.getItem('bs_demo_token')
     );
   }
@@ -260,7 +261,6 @@ export function getCurrentUser() {
     if (isDemoMode()) {
       const demoUser = JSON.parse(
         sessionStorage.getItem('bs_demo_user') ||
-        sessionStorage.getItem('bs_user') ||
         localStorage.getItem('bs_demo_user') ||
         'null'
       );
