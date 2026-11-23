@@ -65,6 +65,24 @@ def list_projects():
     try:
         user_id = get_user_id_from_token(request)
 
+        user_res = (
+            supabase_admin
+            .table('profiles')
+            .select('email')
+            .eq('id', user_id)
+            .single()
+            .execute()
+        )
+        user_email = (user_res.data or {}).get('email', '')
+
+        # Demo iframe users must see 0 history
+        is_demo = (
+            user_email == 'vtabpublicuser@gmail.com'
+            and (request.headers.get('X-Demo-Mode') == 'true' or request.args.get('demo') in ('true', '1'))
+        )
+        if is_demo:
+            return jsonify({'success': True, 'data': []}), 200
+
         response = (
             supabase_admin
             .table('projects')
@@ -76,8 +94,8 @@ def list_projects():
 
         projects_data = response.data or []
 
-        # If user has 0 projects, sync existing estimates from Google Sheet
-        if not projects_data:
+        # If user has 0 projects, sync existing estimates from Google Sheet (do not sync for demo account)
+        if not projects_data and user_email != 'vtabpublicuser@gmail.com':
             from services.google_archive import sync_estimates_from_sheet
             sync_estimates_from_sheet(builder_id=user_id)
 

@@ -6,16 +6,76 @@
 export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const BASE_URL = API_BASE_URL;
 
-// ── Token helpers ────────────────────────────────────────────
+// ── Demo & Token helpers ────────────────────────────────────────────
+export function isDemoMode() {
+  if (typeof window === 'undefined') return false;
+  const isDemoSession = sessionStorage.getItem('bs_is_demo') === 'true';
+  const isDemoPath = window.location.pathname.startsWith('/demo');
+  const params = new URLSearchParams(window.location.search);
+  const isDemoParam = params.get('demo') === 'true' || params.get('embed') === 'true' || params.get('iframe') === 'true';
+  const isInIframe = window.self !== window.top;
+
+  if (isDemoSession || isDemoPath || isDemoParam || isInIframe) {
+    sessionStorage.setItem('bs_is_demo', 'true');
+    return true;
+  }
+  return false;
+}
+
+export async function initDemoSession() {
+  try {
+    sessionStorage.setItem('bs_is_demo', 'true');
+    localStorage.removeItem('bs_active_estimate');
+    localStorage.removeItem('bs_new_estimate_draft');
+
+    const res = await fetch(`${BASE_URL}/api/auth/demo-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Demo-Mode': 'true',
+      },
+      body: JSON.stringify({}),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(json.error || 'Failed to initialize demo session');
+    }
+    const { token, user } = json.data || json;
+    if (token && user) {
+      saveAuthSession(token, user);
+      return user;
+    }
+    throw new Error('Invalid demo session response');
+  } catch (err) {
+    console.error('Demo session init error:', err);
+    throw err;
+  }
+}
+
+export async function checkDemoDownloadStatus() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/estimates/demo-download-status`, {
+      method: 'GET',
+      headers: { 'X-Demo-Mode': 'true' },
+    });
+    const json = await res.json().catch(() => ({}));
+    return json.already_downloaded === true;
+  } catch {
+    return false;
+  }
+}
+
 function getToken() {
   return localStorage.getItem('bs_token');
 }
 
-function getAuthHeaders() {
+export function getAuthHeaders() {
   const token = getToken();
+  const demo = isDemoMode();
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(demo ? { 'X-Demo-Mode': 'true' } : {}),
   };
 }
 

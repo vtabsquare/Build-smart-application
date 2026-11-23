@@ -35,11 +35,11 @@ def validate_request():
     if os.getenv('BUILDSMART_MODE') == 'production' and source.get('mode') != 'google_sheets':
         return jsonify({'status':'not_ready','error':'A validated Google Sheets source is required.'}),503
     if request.path.startswith('/api/') and request.method in ('POST','PUT','PATCH'):
-        if request.path!='/api/admin/rates/import' and not request.is_json:
+        if request.path not in ('/api/admin/rates/import', '/api/auth/demo-session') and not request.is_json:
             return jsonify({'error':'Content-Type must be application/json.'}),415
-        if request.path!='/api/admin/rates/import' and not isinstance(request.get_json(silent=True),dict):
+        if request.path not in ('/api/admin/rates/import', '/api/auth/demo-session') and not isinstance(request.get_json(silent=True),dict):
             return jsonify({'error':'Request body must be a JSON object.'}),400
-    public={'/api/health','/api/auth/login','/api/auth/register','/api/auth/forgot-password','/api/auth/verify-otp','/api/auth/reset-password'}
+    public={'/api/health','/api/auth/login','/api/auth/register','/api/auth/forgot-password','/api/auth/verify-otp','/api/auth/reset-password','/api/auth/demo-session','/api/estimates/demo-download-status'}
     if request.path.startswith('/api/') and request.path not in public:
         header=request.headers.get('Authorization','')
         if not header.startswith('Bearer '): return jsonify({'error':'Login required.'}),401
@@ -91,17 +91,38 @@ def too_large(error): return jsonify({'error':'Request exceeds the 2 MB test lim
 def response_headers(response):
     origin=request.headers.get('Origin')
     allowed=os.getenv('CORS_ALLOWED_ORIGINS','http://localhost:5173,http://127.0.0.1:5173').split(',')
-    if origin in allowed:
-        response.headers['Access-Control-Allow-Origin']=origin
+    if origin in allowed or '*' in allowed:
+        response.headers['Access-Control-Allow-Origin']=origin or '*'
         response.headers['Vary']='Origin'
-        response.headers['Access-Control-Allow-Headers']='Authorization,Content-Type'
+        response.headers['Access-Control-Allow-Headers']='Authorization,Content-Type,X-Demo-Mode'
         response.headers['Access-Control-Allow-Methods']='GET,POST,PUT,DELETE,OPTIONS'
     response.headers['X-Content-Type-Options']='nosniff'
-    response.headers['X-Frame-Options']='DENY'
-    response.headers['Referrer-Policy']='strict-origin-when-cross-origin'
-    response.headers['Content-Security-Policy']=(
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';")
+
+    # Check if request is for embedding / public demo iframe
+    referer = request.headers.get('Referer', '')
+    is_embed = (
+        request.path.startswith('/demo')
+        or request.path.startswith('/embed')
+        or request.args.get('demo') in ('true', '1')
+        or request.args.get('embed') in ('true', '1')
+        or request.args.get('iframe') in ('true', '1')
+        or request.headers.get('Sec-Fetch-Dest') == 'iframe'
+        or '/demo' in referer
+        or 'demo=true' in referer
+        or 'embed=true' in referer
+    )
+
+    if is_embed:
+        response.headers.pop('X-Frame-Options', None)
+        response.headers['Content-Security-Policy']=(
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' *; frame-ancestors *;")
+    else:
+        response.headers['X-Frame-Options']='SAMEORIGIN'
+        response.headers['Referrer-Policy']='strict-origin-when-cross-origin'
+        response.headers['Content-Security-Policy']=(
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';")
     return response
 
 if __name__=='__main__':

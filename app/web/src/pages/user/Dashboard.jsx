@@ -3,8 +3,7 @@ import { useNavigate } from '../../router';
 import Layout from '../../components/layout/Layout';
 import BuildingStudy from '../../components/BuildingStudy';
 import Icon from '../../components/Icon';
-import { projectsAPI, getCurrentUser, formatINR, clearAuthSession } from '../../services/api';
-
+import { projectsAPI, getCurrentUser, formatINR, clearAuthSession, isDemoMode } from '../../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -12,16 +11,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const user = getCurrentUser();
+  const isDemo = isDemoMode();
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (isDemo) {
+      setProjects([]);
+      setLoading(false);
+    } else {
+      loadProjects();
+    }
+  }, [isDemo]);
 
   const loadProjects = async () => {
     try {
       setLoading(true);
       const data = await projectsAPI.list();
-      // api.js auto-unwraps {data: [...]} so data IS the array
       setProjects(Array.isArray(data) ? data : []);
     } catch (err) {
       if (err.message?.includes('401') || err.message?.toLowerCase().includes('unauthorized')) {
@@ -35,31 +39,32 @@ export default function Dashboard() {
     }
   };
 
-  const recentProjects = projects.slice(0, 5);
-  const totalValue = projects.reduce((s, p) => {
+  const recentProjects = isDemo ? [] : projects.slice(0, 5);
+  const totalValue = isDemo ? 0 : projects.reduce((s, p) => {
     const estimates = p.estimates || [];
     const latest = estimates[0];
     return s + (latest?.grand_total || 0);
   }, 0);
 
-
+  const welcomeName = user?.company_name || (isDemo ? 'VTabdemo' : '');
 
   return (
     <Layout role="builder">
-
       <section className="studio-hero dashboard-welcome-banner">
         <div className="studio-hero-content">
-          <h1>{user?.company_name ? 'Welcome back, ' + user.company_name : 'Your estimation workspace'}</h1>
+          <h1>{welcomeName ? `Welcome back, ${welcomeName}` : 'Your estimation workspace'}</h1>
           <p>Start a construction estimate or pick up a saved project.</p>
           <div className="studio-hero-actions">
             <button className="btn studio-hero-primary" onClick={() => navigate('/new-estimate')}><Icon name="plus" /> New estimate</button>
-            <button className="btn studio-hero-secondary" onClick={() => navigate('/projects')}><Icon name="folder" /> My projects</button>
+            {!isDemo && (
+              <button className="btn studio-hero-secondary" onClick={() => navigate('/projects')}><Icon name="folder" /> My projects</button>
+            )}
           </div>
         </div>
         <BuildingStudy />
       </section>
-      <div className="stat-grid">
 
+      <div className="stat-grid">
         {/* Total Projects */}
         <div
           className="stat-card"
@@ -70,10 +75,9 @@ export default function Dashboard() {
           <div className="stat-icon teal" style={{ background: 'linear-gradient(135deg, #0f766e, #14b8a6)' }}><Icon name="folder" size={23} /></div>
           <div className="stat-content">
             <div className="stat-label">Total Projects</div>
-            <div className="stat-value">{loading ? '—' : projects.length}</div>
+            <div className="stat-value">{loading ? '—' : (isDemo ? 0 : projects.length)}</div>
           </div>
         </div>
-
 
         {/* Total Estimate Value */}
         <div
@@ -90,10 +94,9 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* ── Error ──────────────────────────────────────────────────── */}
+      {/* Error */}
       {error && (
         <div className="alert alert-red mb-16">
           <span className="alert-icon">⚠</span>
@@ -101,7 +104,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Recent Estimates Card ───────────────────────────────────── */}
+      {/* Recent Estimates Card */}
       <div className="card" style={{ overflow: 'hidden', marginBottom: '20px' }}>
         <div
           className="card-header"
@@ -114,9 +117,11 @@ export default function Dashboard() {
             <div className="card-title">Recent Estimates</div>
             <div className="card-subtitle">Your last {recentProjects.length} projects</div>
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/projects')}>
-            View All
-          </button>
+          {!isDemo && (
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/projects')}>
+              View All
+            </button>
+          )}
         </div>
 
         <div className="p-0">
@@ -131,9 +136,7 @@ export default function Dashboard() {
                 <div style={{ fontSize: '28px', marginBottom: '10px', opacity: 0.5 }}>⏳</div>
                 Loading projects…
               </div>
-
             ) : recentProjects.length === 0 ? (
-              /* ── Beautiful Empty State ─────────────────────────── */
               <div style={{
                 padding: '64px 32px',
                 textAlign: 'center',
@@ -168,7 +171,6 @@ export default function Dashboard() {
                   ＋ Create Your First Estimate
                 </button>
               </div>
-
             ) : (
               <table>
                 <thead>
@@ -185,7 +187,6 @@ export default function Dashboard() {
                 <tbody>
                   {recentProjects.map((p) => {
                     const latestEst = (p.estimates || [])[0];
-                    const status = latestEst?.status || 'Draft';
                     const date = (p.created_at || '').split('T')[0];
                     return (
                       <tr
@@ -225,10 +226,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-
-
     </Layout>
   );
 }
-

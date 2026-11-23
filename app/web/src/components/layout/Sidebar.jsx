@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from '../../router';
-import { getCurrentUser } from '../../services/api';
+import { getCurrentUser, isDemoMode } from '../../services/api';
 import Icon from '../Icon';
 
 const USER_NAV = [
@@ -43,6 +43,7 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(getCurrentUser());
+  const isDemo = isDemoMode();
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('bs_sidebar_collapsed') === 'true';
   });
@@ -77,8 +78,8 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navGroups = role === 'admin' ? ADMIN_NAV : USER_NAV;
-  const displayName = user?.company_name || user?.email || (role === 'admin' ? 'Admin User' : 'Builder Account');
-  const displayRole = role === 'admin' ? 'Administrator' : 'Builder';
+  const displayName = isDemo ? (user?.company_name || 'VTabdemo') : (user?.company_name || user?.email || (role === 'admin' ? 'Admin User' : 'Builder Account'));
+  const displayRole = isDemo ? 'Demo Builder' : (role === 'admin' ? 'Administrator' : 'Builder');
 
   return (
     <aside className={`sidebar slide-in${isOpen ? ' open' : ''}${isCollapsed ? ' collapsed' : ''}`}>
@@ -100,17 +101,22 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
             <div className="nav-section-label">{group.section}</div>
             {group.items.map((item) => {
               const isActive = location.pathname === item.path;
+              const isDisabledInDemo = isDemo && (item.path === '/projects' || item.path === '/settings');
+
               return (
                 <button
                   key={item.path}
                   aria-current={isActive ? "page" : undefined}
-                  title={item.label}
+                  title={isDisabledInDemo ? `${item.label} (Disabled in Demo)` : item.label}
                   className={`nav-item ${isActive ? 'active' : ''}`}
-                  onClick={() => navigate(item.path)}
+                  disabled={isDisabledInDemo}
+                  style={isDisabledInDemo ? { opacity: 0.38, cursor: 'not-allowed', filter: 'grayscale(0.6)' } : undefined}
+                  onClick={isDisabledInDemo ? (e) => { e.preventDefault(); } : () => navigate(item.path)}
                 >
                   <span className="nav-item-icon"><Icon route={item.path} /></span>
                   <span>{item.label}</span>
-                  {item.badge && <span className="nav-badge">{item.badge}</span>}
+                  {isDisabledInDemo && <span className="nav-badge" style={{ fontSize: '10px', background: 'rgba(148,163,184,0.2)', color: '#94a3b8' }}>Demo</span>}
+                  {!isDisabledInDemo && item.badge && <span className="nav-badge">{item.badge}</span>}
                 </button>
               );
             })}
@@ -118,19 +124,19 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
         ))}
       </nav>
 
-      {/* Footer user profile */}
+      {/* Footer user profile - Disabled / Unclickable in demo mode */}
       <div className="sidebar-footer">
         <div
           className="sidebar-user"
-          onClick={() => navigate(role === 'admin' ? '/admin/settings' : '/settings')}
-          style={{ cursor: 'pointer' }}
-          title="Account settings"
+          onClick={isDemo ? undefined : () => navigate(role === 'admin' ? '/admin/settings' : '/settings')}
+          style={{ cursor: isDemo ? 'default' : 'pointer' }}
+          title={isDemo ? `${displayName} (Profile settings locked in demo)` : "Account settings"}
         >
           <div className="user-avatar" style={{ overflow: 'hidden' }}>
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              (displayName[0] || '?').toUpperCase()
+              (displayName[0] || 'V').toUpperCase()
             )}
           </div>
           <div className="user-info">
@@ -146,4 +152,3 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
     </aside>
   );
 }
-

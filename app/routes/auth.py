@@ -271,6 +271,63 @@ def login():
 
 
 # ---------------------------------------------------------------------------
+# POST /api/auth/demo-session  –  public bypass login for iframe demo
+# ---------------------------------------------------------------------------
+@auth_bp.route('/demo-session', methods=['POST'])
+def demo_session():
+    """
+    Public endpoint to initiate a demo session as vtabpublicuser@gmail.com.
+    Bypasses login completely for the iframe demo.
+    """
+    DEMO_EMAIL = 'vtabpublicuser@gmail.com'
+    try:
+        import hashlib, secrets, time, uuid
+        from services.local_db import connection, read_rows, put_row, now
+        
+        with connection() as db:
+            account = db.execute('SELECT id, email FROM accounts WHERE email=?', (DEMO_EMAIL,)).fetchone()
+            profiles = read_rows(db, 'profiles')
+            profile = next((p for p in profiles if p.get('email') == DEMO_EMAIL), None)
+            
+            if not account or not profile:
+                from werkzeug.security import generate_password_hash
+                uid = account[0] if account else str(uuid.uuid4())
+                if not account:
+                    db.execute('INSERT INTO accounts VALUES(?,?,?)', (uid, DEMO_EMAIL, generate_password_hash('VTabPublicDemo@2026!')))
+                profile = {
+                    'id': uid, 'email': DEMO_EMAIL, 'role': 'builder', 'is_approved': True,
+                    'company_name': 'VTabdemo', 'city': 'COIMBATORE', 'phone': '9876543210',
+                    'failed_login_attempts': 0, 'locked_until': None,
+                    'created_at': now(), 'password_changed_at': now()
+                }
+                put_row(db, 'profiles', profile)
+            else:
+                uid = account[0]
+            
+            # Generate new session token for the demo visitor
+            token = secrets.token_urlsafe(48)
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            db.execute('INSERT INTO sessions VALUES(?,?,?)', (token_hash, uid, time.time() + 24 * 3600))
+
+        return jsonify({
+            'success': True,
+            'token': token,
+            'is_demo': True,
+            'user': {
+                'id': uid,
+                'email': DEMO_EMAIL,
+                'role': 'builder',
+                'company_name': profile.get('company_name') or 'VTabdemo',
+                'phone': profile.get('phone') or '9876543210',
+                'city': profile.get('city') or 'COIMBATORE',
+                'is_approved': True,
+            }
+        }), 200
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+# ---------------------------------------------------------------------------
 # GET /api/auth/me
 # ---------------------------------------------------------------------------
 @auth_bp.route('/me', methods=['GET'])
@@ -569,6 +626,9 @@ def update_profile():
 
         if not user:
             return jsonify({'error': 'Invalid or expired token.'}), 401
+
+        if user.email == 'vtabpublicuser@gmail.com' and (request.headers.get('X-Demo-Mode') == 'true' or request.args.get('demo')):
+            return jsonify({'error': 'Settings cannot be modified in the demo version.'}), 403
 
         data = request.get_json(force=True) or {}
         company_name = data.get('company_name')

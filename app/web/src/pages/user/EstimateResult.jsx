@@ -2,7 +2,7 @@ import Icon from '../../components/Icon';
 import { useEffect, useState } from 'react';
 import { useNavigate } from '../../router';
 import Layout from '../../components/layout/Layout';
-import { formatINR, estimatesAPI, API_BASE_URL } from '../../services/api';
+import { formatINR, estimatesAPI, API_BASE_URL, isDemoMode, getCurrentUser, checkDemoDownloadStatus } from '../../services/api';
 
 const CATEGORIES = ['Civil Works', 'Labour', 'Flooring', 'Painting', 'Electrical', 'Plumbing', 'Interiors'];
 
@@ -50,6 +50,19 @@ export default function EstimateResult() {
   const [emailStatus, setEmailStatus] = useState(null); // { success: boolean, text: string }
   const [archiving, setArchiving] = useState(false);
   const [archiveError, setArchiveError] = useState('');
+  const [demoContactModal, setDemoContactModal] = useState(null);
+  const [demoDownloadUsed, setDemoDownloadUsed] = useState(false);
+  const user = getCurrentUser();
+  const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
+
+  // Pre-check on mount: if demo mode, check if this IP already downloaded
+  useEffect(() => {
+    if (isDemo) {
+      checkDemoDownloadStatus().then(used => {
+        if (used) setDemoDownloadUsed(true);
+      });
+    }
+  }, [isDemo]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('bs_estimate');
@@ -155,15 +168,30 @@ export default function EstimateResult() {
     try {
       setDownloadingPdf(true);
       const token = localStorage.getItem('bs_token');
+      const isDemo = isDemoMode();
       const response = await fetch(`${API_BASE_URL}/api/estimates/${result.estimate_id}/download-pdf`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          ...(isDemo ? { 'X-Demo-Mode': 'true' } : {})
         }
       });
       if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || 'The PDF could not be generated. Reopen the saved estimate and try again.');
+        const error = await response.json().catch(() => ({}));
+        if (response.status === 429 || error.demo_limit_reached) {
+          setDemoDownloadUsed(true);
+          setDemoContactModal({
+            title: 'Demo PDF Limit Reached',
+            message: error.error || 'In this demo version, each IP address is permitted to download only one estimate PDF. To generate unlimited estimates, download branded PDFs, and export full spreadsheets, please contact VTab Square.',
+            contact: error.contact || {
+              company: 'VTab Square',
+              email: 'vitabsquare@gmail.com',
+              phone: '+91 9876543210'
+            }
+          });
+          return;
+        }
+        throw new Error(error.error || 'The PDF could not be generated. Reopen the saved estimate and try again.');
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -174,6 +202,8 @@ export default function EstimateResult() {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
+      // Mark download as used in demo mode — disable button immediately
+      if (isDemo) setDemoDownloadUsed(true);
     } catch (err) {
       alert("Error printing PDF: " + err.message);
     } finally {
@@ -182,6 +212,19 @@ export default function EstimateResult() {
   };
 
   const handleEmailPdf = async () => {
+    if (isDemo) {
+      setDemoContactModal({
+        title: 'Demo Version: Email Disabled',
+        message: 'This is a demo version. Sending quotation emails to clients is disabled in this public demo account. Please contact VTab Square for further details and commercial access.',
+        contact: {
+          company: 'VTab Square',
+          email: 'vitabsquare@gmail.com',
+          phone: '+91 9876543210'
+        }
+      });
+      return;
+    }
+
     if (!result || !result.estimate_id) {
       alert("Estimate ID not found. Generate the estimate first.");
       return;
@@ -543,9 +586,28 @@ export default function EstimateResult() {
           {/* Right: action buttons */}
           <div style={{ display:'flex', gap:'10px', alignItems:'center', flexWrap:'wrap', flexShrink:1 }}>
             <button
-              onClick={handlePrint}
+              onClick={isDemo && demoDownloadUsed
+                ? () => setDemoContactModal({
+                    title: 'Demo PDF Already Downloaded',
+                    message: 'You have already downloaded the PDF estimate from this device (IP address). In this demo version, each device is permitted to download only one PDF. Contact VTab Square for unlimited PDF generation and email delivery.',
+                    contact: { company: 'VTab Square', email: 'vitabsquare@gmail.com', phone: '+91 9876543210' }
+                  })
+                : handlePrint}
               disabled={downloadingPdf}
-              style={{
+              style={isDemo && demoDownloadUsed ? {
+                background: 'rgba(148, 163, 184, 0.12)',
+                border: '1px solid rgba(148, 163, 184, 0.35)',
+                color: '#94a3b8',
+                borderRadius: '10px',
+                padding: '9px 16px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'not-allowed',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                opacity: 0.85,
+              } : {
                 background:'rgba(14,165,233,0.15)', border:'1px solid rgba(14,165,233,0.35)',
                 color:'#7dd3fc', borderRadius:'10px', padding:'9px 18px',
                 fontSize:'13px', fontWeight:600, cursor: downloadingPdf ? 'not-allowed' : 'pointer',
@@ -553,26 +615,72 @@ export default function EstimateResult() {
                 transition:'all 0.2s',
                 opacity: downloadingPdf ? 0.6 : 1,
               }}
-              onMouseOver={e => !downloadingPdf && (e.currentTarget.style.background='rgba(14,165,233,0.28)')}
-              onMouseOut={e => !downloadingPdf && (e.currentTarget.style.background='rgba(14,165,233,0.15)')}
+              onMouseOver={e => !(isDemo && demoDownloadUsed) && !downloadingPdf && (e.currentTarget.style.background='rgba(14,165,233,0.28)')}
+              onMouseOut={e => !(isDemo && demoDownloadUsed) && !downloadingPdf && (e.currentTarget.style.background='rgba(14,165,233,0.15)')}
+              title={isDemo && demoDownloadUsed ? "PDF already downloaded from this device — click for details" : "Download estimate PDF"}
             >
-              {downloadingPdf ? '⏳ Generating PDF...' : '📥 Download PDF'}
+              {isDemo && demoDownloadUsed ? (
+                <>
+                  📄 PDF Downloaded
+                  <span style={{ fontSize: '10px', background: 'rgba(239,68,68,0.18)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '4px', padding: '1px 6px', fontWeight: 700 }}>
+                    Limit Reached
+                  </span>
+                </>
+              ) : (
+                downloadingPdf ? '⏳ Generating PDF...' : '📥 Download PDF'
+              )}
             </button>
             <button
               onClick={handleEmailPdf}
-              disabled={sendingEmail}
-              style={{
-                background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)',
-                color: '#34d399', borderRadius: '10px', padding: '9px 18px',
-                fontSize: '13px', fontWeight: 600, cursor: sendingEmail ? 'not-allowed' : 'pointer',
-                display: 'inline-flex', alignItems: 'center', gap: '7px',
+              style={isDemo ? {
+                background: 'rgba(148, 163, 184, 0.12)',
+                border: '1px solid rgba(148, 163, 184, 0.35)',
+                color: '#94a3b8',
+                borderRadius: '10px',
+                padding: '9px 16px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'not-allowed',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                transition: 'all 0.2s',
+                opacity: 0.85,
+              } : {
+                background: 'rgba(16,185,129,0.15)',
+                border: '1px solid rgba(16,185,129,0.35)',
+                color: '#34d399',
+                borderRadius: '10px',
+                padding: '9px 18px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: sendingEmail ? 'not-allowed' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
                 transition: 'all 0.2s',
                 opacity: sendingEmail ? 0.6 : 1,
               }}
-              onMouseOver={e => !sendingEmail && (e.currentTarget.style.background='rgba(16,185,129,0.28)')}
-              onMouseOut={e => !sendingEmail && (e.currentTarget.style.background='rgba(16,185,129,0.15)')}
+              onMouseOver={e => !isDemo && !sendingEmail && (e.currentTarget.style.background='rgba(16,185,129,0.28)')}
+              onMouseOut={e => !isDemo && !sendingEmail && (e.currentTarget.style.background='rgba(16,185,129,0.15)')}
+              title={isDemo ? "Email sending is disabled in demo version (Click for details)" : "Email estimate PDF to client"}
             >
-              <Icon name="mail" size={16} />{sendingEmail ? "Sending…" : "Email PDF"}
+              <Icon name="mail" size={16} />
+              <span>{sendingEmail ? "Sending…" : "Email PDF"}</span>
+              {isDemo && (
+                <span style={{
+                  fontSize: '10px',
+                  background: 'rgba(239, 68, 68, 0.18)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  borderRadius: '4px',
+                  padding: '1px 6px',
+                  fontWeight: 700,
+                  letterSpacing: '0.3px',
+                }}>
+                  Disabled
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -1499,6 +1607,99 @@ export default function EstimateResult() {
         </div>
 
       </div>
+
+      {/* Demo Notice / Contact Modal */}
+      {demoContactModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: '16px', maxWidth: '520px', width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
+            animation: 'fadeIn 0.2s ease-out'
+          }}>
+            <div style={{
+              padding: '20px 24px', background: 'linear-gradient(135deg, #0f766e 0%, #0f172a 100%)',
+              color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(255,255,255,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px'
+                }}>
+                  ℹ️
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700 }}>{demoContactModal.title}</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#99f6e4' }}>BuildSmart 360 Public Demo</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDemoContactModal(null)}
+                style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px',
+                padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px'
+              }}>
+                <span style={{ fontSize: '20px' }}>🚫</span>
+                <span style={{ fontSize: '13px', color: '#991b1b', fontWeight: 600 }}>
+                  Demo Version Notice: Email delivery is disabled.
+                </span>
+              </div>
+
+              <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+                {demoContactModal.message}
+              </p>
+
+              <div style={{
+                background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px',
+                padding: '16px', marginBottom: '24px'
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                  Contact VTab Square for Further Details
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#1e293b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Company:</span>
+                    <span style={{ fontWeight: 700, color: '#0f766e' }}>VTab Square</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Email:</span>
+                    <a href="mailto:vitabsquare@gmail.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>vitabsquare@gmail.com</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Phone:</span>
+                    <a href="tel:+919876543210" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>+91 9876543210</a>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  onClick={() => setDemoContactModal(null)}
+                  style={{
+                    padding: '10px 20px', borderRadius: '8px', border: 'none',
+                    background: 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)',
+                    color: 'white', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(15,118,110,0.25)'
+                  }}
+                >
+                  Understood
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -13,10 +13,41 @@ from services.estimator import calculate_estimate
 from services.branding import company_profile
 from services.google_archive import archive_estimate
 from services.email_delivery import EmailError, send_transactional, valid_email
-from services.local_db import transaction
+from services.local_db import transaction, connection, now
 from services.pdf_generator import generate_estimate_pdf
 
 estimates_bp = Blueprint('estimates_bp', __name__, url_prefix='/api/estimates')
+
+
+# ---------------------------------------------------------------------------
+# GET /api/estimates/demo-download-status  –  public, no auth required
+# ---------------------------------------------------------------------------
+@estimates_bp.route('/demo-download-status', methods=['GET'])
+def demo_download_status():
+    """Public endpoint: check if the calling IP has already downloaded a demo PDF."""
+    client_ip = (
+        request.headers.get('CF-Connecting-IP') or
+        request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or
+        request.remote_addr or
+        'unknown'
+    )
+    with connection() as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS demo_pdf_downloads (
+                ip TEXT PRIMARY KEY,
+                downloaded_at TEXT,
+                estimate_id TEXT
+            )
+        """)
+        existing = db.execute(
+            "SELECT downloaded_at FROM demo_pdf_downloads WHERE ip = ?",
+            (client_ip,)
+        ).fetchone()
+    return jsonify({
+        'ip': client_ip,
+        'already_downloaded': existing is not None,
+        'downloaded_at': existing[0] if existing else None
+    })
 
 
 def archive_saved_estimate(estimate_id, project, user_id):
@@ -856,6 +887,18 @@ def share_estimate_pdf(estimate_id):
         builder_name = builder_profile.get('company_name')
         builder_logo = builder_profile.get('avatar_url')
 
+        is_demo = request.headers.get('X-Demo-Mode') == 'true'
+        if is_demo or builder_profile.get('email') == 'vtabpublicuser@gmail.com':
+            return jsonify({
+                'error': 'Email delivery is disabled in demo mode. Please contact VTab Square for full access.',
+                'demo_blocked': True,
+                'contact': {
+                    'company': 'VTab Square',
+                    'email': 'vitabsquare@gmail.com',
+                    'phone': '+91 9876543210'
+                }
+            }), 403
+
         # 3. Generate PDF
         pdf_bytes = generate_estimate_pdf(
             estimate, items,
@@ -971,11 +1014,11 @@ def download_estimate_pdf(estimate_id):
         )
         items = items_res.data or []
 
-        # Fetch builder profile (company_name and avatar_url)
+        # Fetch builder profile (company_name, avatar_url, and email)
         profile_res = (
             supabase_admin
             .table('profiles')
-            .select('company_name, avatar_url')
+            .select('company_name, avatar_url, email')
             .eq('id', user_id)
             .single()
             .execute()
@@ -983,6 +1026,37 @@ def download_estimate_pdf(estimate_id):
         builder_profile = profile_res.data or {}
         builder_name = builder_profile.get('company_name')
         builder_logo = builder_profile.get('avatar_url')
+
+        is_demo = request.headers.get('X-Demo-Mode') == 'true'
+        if is_demo or builder_profile.get('email') == 'vtabpublicuser@gmail.com':
+            client_ip = (
+                request.headers.get('CF-Connecting-IP') or
+                request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or
+                request.remote_addr or
+                'unknown'
+            )
+            with connection() as db:
+                db.execute("""
+                    CREATE TABLE IF NOT EXISTS demo_pdf_downloads (
+                        ip TEXT PRIMARY KEY,
+                        downloaded_at TEXT,
+                        estimate_id TEXT
+                    )
+                """)
+                existing = db.execute("SELECT ip, downloaded_at FROM demo_pdf_downloads WHERE ip = ?", (client_ip,)).fetchone()
+                if existing:
+                    return jsonify({
+                        'error': 'Download limit reached: In this demo version, each IP address is permitted to download only one estimate PDF.',
+                        'demo_limit_reached': True,
+                        'contact': {
+                            'company': 'VTab Square',
+                            'email': 'vitabsquare@gmail.com',
+                            'phone': '+91 9876543210'
+                        }
+                    }), 429
+                db.execute("INSERT OR REPLACE INTO demo_pdf_downloads (ip, downloaded_at, estimate_id) VALUES (?, ?, ?)",
+                           (client_ip, now(), estimate_id))
+                db.commit()
 
         # Generate PDF
         pdf_bytes = generate_estimate_pdf(
