@@ -8,6 +8,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [googleSetupAvailable, setGoogleSetupAvailable] = useState(false);
   useEffect(() => {
+    sessionStorage.removeItem('bs_is_demo');
     fetch(`${API_BASE_URL}/api/health`).then(r => r.json())
       .then(data => setGoogleSetupAvailable(data.google_setup_available)).catch(() => {});
   }, []);

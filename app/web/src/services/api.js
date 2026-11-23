@@ -200,11 +200,18 @@ export const sourceAPI = {
 export function saveAuthSession(token, user) {
   localStorage.setItem('bs_token', token);
   localStorage.setItem('bs_user', JSON.stringify(user));
+  if (user?.email !== 'vtabpublicuser@gmail.com') {
+    sessionStorage.removeItem('bs_is_demo');
+  }
 }
 
 export function clearAuthSession() {
   localStorage.removeItem('bs_token');
   localStorage.removeItem('bs_user');
+  sessionStorage.removeItem('bs_is_demo');
+  sessionStorage.removeItem('bs_estimate');
+  localStorage.removeItem('bs_active_estimate');
+  localStorage.removeItem('bs_new_estimate_draft');
 }
 
 export function getCurrentUser() {
