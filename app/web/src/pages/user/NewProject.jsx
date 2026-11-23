@@ -613,9 +613,42 @@ export default function NewProject() {
 
   return (
     <Layout role="builder">
-      <section className="studio-workflow-head">
-        <h1><Icon name="estimate" size={24} /> Create a new estimate</h1>
-        <p>Set your package, building specifications, materials, and add-ons.</p>
+      <section className="studio-workflow-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1><Icon name="estimate" size={24} /> Create a new estimate</h1>
+          <p>Set your package, building specifications, materials, and add-ons.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 18px',
+            borderRadius: '9px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.22)',
+            color: '#e2e8f0',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)';
+            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+            e.currentTarget.style.color = '#fca5a5';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
+            e.currentTarget.style.color = '#e2e8f0';
+          }}
+          title="Cancel estimate and return to dashboard"
+        >
+          <Icon name="close" size={14} /> Cancel
+        </button>
       </section>
       <nav className="card studio-steps" aria-label="Estimate progress">
         {STEPS.map(({ num, label }) => (
@@ -1898,9 +1931,10 @@ export default function NewProject() {
       }}>
         <div className="wizard-footer-back">
           {step > 1 && (
-            <button className="btn btn-secondary" onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>← Back</button>
+            <button className="btn btn-secondary" onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ← Previous: Step {step - 1}
+            </button>
           )}
-          <button className="btn btn-ghost" onClick={() => navigate('/dashboard')}>Cancel</button>
         </div>
         <div className="wizard-footer-main" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {errors._global && (
