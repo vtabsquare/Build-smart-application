@@ -1,18 +1,17 @@
 import io
 import math
 import base64
-from reportlab.lib.pagesizes import A4
+import re
 from xml.sax.saxutils import escape
+from reportlab.lib.pagesizes import A4
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph as RichParagraph, Spacer, Table, TableStyle, PageBreak, KeepTogether, Image as RLImage
 )
+from reportlab.pdfgen import canvas
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-
-def Paragraph(value, style):
-    return RichParagraph(escape(str(value)), style)
 
 # Page layout setup
 PAGE_W, PAGE_H = A4
@@ -26,6 +25,7 @@ C_WHITE = colors.white
 C_GRAY50 = colors.HexColor("#f9fafb")
 C_GRAY100 = colors.HexColor("#f3f4f6")
 C_GRAY200 = colors.HexColor("#e5e7eb")
+C_GRAY400 = colors.HexColor("#9ca3af")
 C_GRAY600 = colors.HexColor("#4b5563")
 C_GRAY800 = colors.HexColor("#1f2937")
 
@@ -35,17 +35,98 @@ def S(name, **kw):
 
 # Standard Paragraph Styles
 TITLE = S('title', fontName='Helvetica-Bold', fontSize=22, leading=26, textColor=C_WHITE, alignment=TA_CENTER)
-SUB = S('sub', fontName='Helvetica', fontSize=10, leading=14, textColor=C_GRAY200, alignment=TA_CENTER)
-H1 = S('h1', fontName='Helvetica-Bold', fontSize=14, leading=18, textColor=C_DARK, spaceBefore=14, spaceAfter=6)
-H2 = S('h2', fontName='Helvetica-Bold', fontSize=11, leading=15, textColor=C_PRIMARY, spaceBefore=10, spaceAfter=4)
+SUB = S('sub', fontName='Helvetica', fontSize=9.5, leading=14, textColor=C_GRAY200, alignment=TA_CENTER)
+H1 = S('h1', fontName='Helvetica-Bold', fontSize=13, leading=17, textColor=C_DARK, spaceBefore=12, spaceAfter=6, keepWithNext=True)
+H2 = S('h2', fontName='Helvetica-Bold', fontSize=10.5, leading=14, textColor=C_PRIMARY, spaceBefore=10, spaceAfter=4, keepWithNext=True)
 BODY = S('body', fontName='Helvetica', fontSize=8.5, leading=12, textColor=C_GRAY600)
 BODYB = S('bodyb', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_GRAY800)
 
 # Table cell styles
-TC = S('tc', fontName='Helvetica', fontSize=8, leading=11, textColor=C_GRAY600)
-TCB = S('tcb', fontName='Helvetica-Bold', fontSize=8, leading=11, textColor=C_GRAY800)
+TC = S('tc', fontName='Helvetica', fontSize=8, leading=11, textColor=C_GRAY600, alignment=TA_LEFT)
+TCB = S('tcb', fontName='Helvetica-Bold', fontSize=8, leading=11, textColor=C_GRAY800, alignment=TA_LEFT)
+TCC = S('tcc', fontName='Helvetica', fontSize=8, leading=11, textColor=C_GRAY600, alignment=TA_CENTER)
+TCCB = S('tccb', fontName='Helvetica-Bold', fontSize=8, leading=11, textColor=C_GRAY800, alignment=TA_CENTER)
+TCR = S('tcr', fontName='Helvetica', fontSize=8, leading=11, textColor=C_GRAY600, alignment=TA_RIGHT)
+TCRB = S('tcrb', fontName='Helvetica-Bold', fontSize=8, leading=11, textColor=C_GRAY800, alignment=TA_RIGHT)
+
+# Table header styles
 TCH = S('tch', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_WHITE, alignment=TA_CENTER)
-TCPRI = S('tcpri', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_PRIMARY)
+TCHL = S('tchl', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_WHITE, alignment=TA_LEFT)
+TCHR = S('tchr', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_WHITE, alignment=TA_RIGHT)
+
+# Highlight styles
+TCPRI = S('tcpri', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_PRIMARY, alignment=TA_LEFT)
+TCPRIC = S('tcpric', fontName='Helvetica-Bold', fontSize=8.5, leading=12, textColor=C_PRIMARY, alignment=TA_CENTER)
+
+def sanitize_html_for_reportlab(text):
+    """
+    Sanitize text containing HTML or special characters for ReportLab Paragraphs.
+    Converts supported styling tags into valid ReportLab XML, cleans invalid tags,
+    replaces unrenderable unicode currency symbols, and escapes lone ampersands.
+    """
+    if text is None:
+        return ""
+    text = str(text)
+    if not text.strip():
+        return ""
+
+    # Replace Rupee symbol with 'Rs. ' to avoid missing glyph square in Helvetica
+    text = re.sub(r'₹\s*', 'Rs. ', text)
+    # Normalize common HTML formatting tags
+    text = re.sub(r'<br\s*/?>', '<br/>', text, flags=re.IGNORECASE)
+    text = re.sub(r'<strong\b[^>]*>', '<b>', text, flags=re.IGNORECASE)
+    text = re.sub(r'</strong>', '</b>', text, flags=re.IGNORECASE)
+    text = re.sub(r'<em\b[^>]*>', '<i>', text, flags=re.IGNORECASE)
+    text = re.sub(r'</em>', '</i>', text, flags=re.IGNORECASE)
+    text = re.sub(r'</p\s*>\s*<p\b[^>]*>', '<br/><br/>', text, flags=re.IGNORECASE)
+    text = re.sub(r'</?p\b[^>]*>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'</?(?:span|div)\b[^>]*>', '', text, flags=re.IGNORECASE)
+    # Escape standalone '&' not part of a valid XML entity
+    text = re.sub(r'&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', text)
+
+    allowed_pattern = re.compile(
+        r'^(?:</?(?:b|i|u|sub|super|font|color)(?:\s+[^>]*)?>|<br/>)$',
+        re.IGNORECASE
+    )
+
+    parts = re.split(r'(<[^>]+>)', text)
+    result = []
+    open_tags = []
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith('<') and part.endswith('>'):
+            if allowed_pattern.match(part):
+                tag_name_match = re.match(r'^</?([a-zA-Z]+)', part)
+                if tag_name_match:
+                    tag_name = tag_name_match.group(1).lower()
+                    if part.startswith('</'):
+                        if tag_name in open_tags:
+                            open_tags.remove(tag_name)
+                            result.append(f'</{tag_name}>')
+                    elif not part.endswith('/>'):
+                        open_tags.append(tag_name)
+                        result.append(part)
+                    else:
+                        result.append(part)
+            else:
+                part_escaped = part.replace('<', '&lt;').replace('>', '&gt;')
+                result.append(part_escaped)
+        else:
+            part_escaped = part.replace('<', '&lt;').replace('>', '&gt;')
+            result.append(part_escaped)
+
+    for tag in reversed(open_tags):
+        result.append(f'</{tag}>')
+
+    return ''.join(result)
+
+def Paragraph(value, style):
+    cleaned = sanitize_html_for_reportlab(value)
+    try:
+        return RichParagraph(cleaned, style)
+    except Exception:
+        return RichParagraph(escape(str(value)), style)
 
 def format_inr(value):
     try:
@@ -55,7 +136,6 @@ def format_inr(value):
         return f"Rs. {value}"
 
 def clean_description(desc):
-    import re
     # Remove "(Included in Package, Rate: Rs. ...)"
     desc = re.sub(r'\s*\(Included in Package,\s*Rate:\s*Rs\.[^)]+\)', '', desc)
     # Remove "(Included in Package)"
@@ -67,6 +147,39 @@ def clean_description(desc):
     # Remove ", Rate: Rs. ... /Sqft" or similar if any
     desc = re.sub(r',\s*Rate:\s*Rs\.[^)]+', '', desc)
     return desc.strip()
+
+class NumberedCanvas(canvas.Canvas):
+    """
+    Two-pass canvas to dynamically compute and print 'Page X of Y'
+    along with clean footer separator lines across all document pages.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_decorations(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_decorations(self, page_count):
+        self.saveState()
+        self.setFont('Helvetica', 8)
+        self.setFillColor(C_GRAY600)
+        self.setStrokeColor(C_GRAY200)
+        self.setLineWidth(0.5)
+        self.line(MARGIN, 0.9 * cm, PAGE_W - MARGIN, 0.9 * cm)
+        self.drawString(MARGIN, 0.55 * cm, "BuildSmart 360 · Detailed Construction Cost Estimate & BOQ")
+        page_num_str = f"Page {self._pageNumber} of {page_count}"
+        self.drawRightString(PAGE_W - MARGIN, 0.55 * cm, page_num_str)
+        self.restoreState()
 
 def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None):
     """
@@ -175,20 +288,23 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
     # 2. Project Specifications Summary Table (2-Column Grid Layout)
     story.append(Paragraph("1. Project & Builder Specification", H1))
     spec_data = [
-        [RichParagraph("<b>Project/Site Name:</b>", BODY), Paragraph(project_name, BODY),
-         RichParagraph("<b>Builder Company:</b>", BODY), Paragraph(builder_company, BODY)],
-        [RichParagraph("<b>Customer Name:</b>", BODY), Paragraph(customer_name, BODY),
-         RichParagraph("<b>Location/Address:</b>", BODY), Paragraph(location, BODY)],
-        [RichParagraph("<b>Quality Tier:</b>", BODY), Paragraph(quality_tier, BODY),
-         RichParagraph("<b>Total Built-up Area:</b>", BODY), Paragraph(f"{total_area} Sqft", BODY)],
-        [RichParagraph("<b>Quotation Date:</b>", BODY), Paragraph(date_str, BODY),
-         RichParagraph("<b>Contingency Margins:</b>", BODY), Paragraph(f"{estimate.get('contingency_pct', 5)}%", BODY)]
+        [Paragraph("<b>Project/Site Name:</b>", BODY), Paragraph(project_name, BODY),
+         Paragraph("<b>Builder Company:</b>", BODY), Paragraph(builder_company, BODY)],
+        [Paragraph("<b>Customer Name:</b>", BODY), Paragraph(customer_name, BODY),
+         Paragraph("<b>Location/Address:</b>", BODY), Paragraph(location, BODY)],
+        [Paragraph("<b>Quality Tier:</b>", BODY), Paragraph(quality_tier, BODY),
+         Paragraph("<b>Total Built-up Area:</b>", BODY), Paragraph(f"{total_area} Sqft", BODY)],
+        [Paragraph("<b>Quotation Date:</b>", BODY), Paragraph(date_str, BODY),
+         Paragraph("<b>Contingency Margins:</b>", BODY), Paragraph(f"{estimate.get('contingency_pct', 5)}%", BODY)]
     ]
     spec_table = Table(spec_data, colWidths=[CONTENT_W*0.18, CONTENT_W*0.32, CONTENT_W*0.18, CONTENT_W*0.32])
     spec_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), C_GRAY50),
         ('GRID', (0,0), (-1,-1), 0.5, C_GRAY200),
-        ('PADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING', (0,0), (-1,-1), 8),
+        ('RIGHTPADDING', (0,0), (-1,-1), 8),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     story.append(spec_table)
@@ -217,27 +333,34 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
     open_area = max(0.0, plot_area - ground_coverage_area)
     
     area_headers = [
-        Paragraph("Specification", TCH),
-        Paragraph("Calculated Area", TCH),
+        Paragraph("Specification", TCHL),
+        Paragraph("Calculated Area", TCHR),
         Paragraph("Unit", TCH),
-        Paragraph("Details / Formula", TCH)
+        Paragraph("Details / Formula", TCHL)
     ]
     area_rows = [
         area_headers,
-        [Paragraph("Plot Area", TC), Paragraph(f"{plot_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Plot Length × Plot Width", TC)],
-        [Paragraph("Ground Coverage Area", TC), Paragraph(f"{ground_coverage_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Ground Floor Area + Portico + Staircase", TC)],
-        [Paragraph("Open Area", TC), Paragraph(f"{open_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Plot Area − Ground Coverage Area", TC)],
-        [Paragraph("Total Built-up Area", TC), Paragraph(f"{total_builtup_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Sum of all floors + Portico + Staircase", TC)],
-        [Paragraph("Staircase Area", TC), Paragraph(f"{staircase_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Staircase Length × Staircase Width", TC)],
-        [Paragraph("Portico Area", TC), Paragraph(f"{portico_area:,.2f}".rstrip('0').rstrip('.'), TC), Paragraph("Sqft", TC), Paragraph("Portico Length × Portico Width", TC)]
+        [Paragraph("Plot Area", TC), Paragraph(f"{plot_area:,.2f}".rstrip('0').rstrip('.'), TCR), Paragraph("Sqft", TCC), Paragraph("Plot Length × Plot Width", TC)],
+        [Paragraph("Ground Coverage Area", TC), Paragraph(f"{ground_coverage_area:,.2f}".rstrip('0').rstrip('.'), TCR), Paragraph("Sqft", TCC), Paragraph("Ground Floor Area + Portico + Staircase", TC)],
+        [Paragraph("Open Area", TC), Paragraph(f"{open_area:,.2f}".rstrip('0').rstrip('.'), TCR), Paragraph("Sqft", TCC), Paragraph("Plot Area − Ground Coverage Area", TC)],
+        [Paragraph("Total Built-up Area", TCB), Paragraph(f"{total_builtup_area:,.2f}".rstrip('0').rstrip('.'), TCRB), Paragraph("Sqft", TCC), Paragraph("Sum of all floors + Portico + Staircase", TC)],
+        [Paragraph("Staircase Area", TC), Paragraph(f"{staircase_area:,.2f}".rstrip('0').rstrip('.'), TCR), Paragraph("Sqft", TCC), Paragraph("Staircase Length × Staircase Width", TC)],
+        [Paragraph("Portico Area", TC), Paragraph(f"{portico_area:,.2f}".rstrip('0').rstrip('.'), TCR), Paragraph("Sqft", TCC), Paragraph("Portico Length × Portico Width", TC)]
     ]
-    area_table = Table(area_rows, colWidths=[CONTENT_W * 0.25, CONTENT_W * 0.20, CONTENT_W * 0.15, CONTENT_W * 0.40])
+    area_table = Table(area_rows, colWidths=[CONTENT_W * 0.28, CONTENT_W * 0.18, CONTENT_W * 0.12, CONTENT_W * 0.42], repeatRows=1)
     area_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), C_PRIMARY),
         ('GRID', (0,0), (-1,-1), 0.5, C_GRAY200),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [C_WHITE, C_GRAY50]),
-        ('PADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('LEFTPADDING', (0,0), (-1,-1), 6),
+        ('RIGHTPADDING', (0,0), (-1,-1), 6),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (0,0), (0,-1), 'LEFT'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('ALIGN', (2,0), (2,-1), 'CENTER'),
+        ('ALIGN', (3,0), (3,-1), 'LEFT'),
     ]))
     
     story.append(Paragraph("1.1 Project Area Specifications", H2))
@@ -248,10 +371,10 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
     rooms_list = inj.get("rooms_list") or []
     if rooms_list:
         room_headers = [
-            Paragraph("Floor", TCH),
-            Paragraph("Room Name", TCH),
+            Paragraph("Floor", TCHL),
+            Paragraph("Room Name", TCHL),
             Paragraph("Dimensions", TCH),
-            Paragraph("Area", TCH),
+            Paragraph("Area", TCHR),
             Paragraph("Doors", TCH),
             Paragraph("Windows", TCH),
             Paragraph("Elec Points", TCH),
@@ -280,31 +403,37 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
             room_rows.append([
                 Paragraph(floor_name, TC),
                 Paragraph(r.get('name', ''), TC),
-                Paragraph(dim_str, TC),
-                Paragraph(area_str, TC),
-                Paragraph(str(door_count), TC),
-                Paragraph(str(window_count), TC),
-                Paragraph(str(elec_points), TC),
-                Paragraph(str(plumb_points), TC)
+                Paragraph(dim_str, TCC),
+                Paragraph(area_str, TCR),
+                Paragraph(str(door_count), TCC),
+                Paragraph(str(window_count), TCC),
+                Paragraph(str(elec_points), TCC),
+                Paragraph(str(plumb_points), TCC)
             ])
             
         room_table = Table(room_rows, colWidths=[
             CONTENT_W * 0.15,  # Floor
-            CONTENT_W * 0.22,  # Room Name
-            CONTENT_W * 0.15,  # Dimensions
+            CONTENT_W * 0.23,  # Room Name
+            CONTENT_W * 0.14,  # Dimensions
             CONTENT_W * 0.12,  # Area
-            CONTENT_W * 0.08,  # Doors
-            CONTENT_W * 0.08,  # Windows
-            CONTENT_W * 0.10,  # Elec
-            CONTENT_W * 0.10   # Plumb
-        ])
+            CONTENT_W * 0.09,  # Doors
+            CONTENT_W * 0.09,  # Windows
+            CONTENT_W * 0.09,  # Elec
+            CONTENT_W * 0.09   # Plumb
+        ], repeatRows=1)
         room_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), C_PRIMARY),
             ('GRID', (0,0), (-1,-1), 0.5, C_GRAY200),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [C_WHITE, C_GRAY50]),
-            ('PADDING', (0,0), (-1,-1), 5),
+            ('TOPPADDING', (0,0), (-1,-1), 5),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+            ('LEFTPADDING', (0,0), (-1,-1), 5),
+            ('RIGHTPADDING', (0,0), (-1,-1), 5),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('ALIGN', (4,1), (-1,-1), 'CENTER'),
+            ('ALIGN', (0,0), (1,-1), 'LEFT'),
+            ('ALIGN', (2,0), (2,-1), 'CENTER'),
+            ('ALIGN', (3,0), (3,-1), 'RIGHT'),
+            ('ALIGN', (4,0), (-1,-1), 'CENTER'),
         ]))
         
         story.append(Paragraph("1.2 Room-wise Specifications & Fixtures", H2))
@@ -364,34 +493,42 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
     
     stage_headers = [
         Paragraph("#", TCH),
-        Paragraph("Stage", TCH),
+        Paragraph("Stage", TCHL),
         Paragraph("Percentage", TCH),
-        Paragraph("Description", TCH),
-        Paragraph("Estimated Cost", TCH)
+        Paragraph("Description", TCHL),
+        Paragraph("Estimated Cost", TCHR)
     ]
     stage_col_widths = [
-        CONTENT_W * 0.05,  # #
-        CONTENT_W * 0.25,  # Stage
-        CONTENT_W * 0.10,  # Percentage
-        CONTENT_W * 0.45,  # Description
-        CONTENT_W * 0.15   # Estimated Cost
+        CONTENT_W * 0.06,  # #
+        CONTENT_W * 0.26,  # Stage
+        CONTENT_W * 0.13,  # Percentage
+        CONTENT_W * 0.38,  # Description
+        CONTENT_W * 0.17   # Estimated Cost
     ]
     stage_rows = [stage_headers]
     for s in stages:
         stage_rows.append([
-            Paragraph(f"<b>{s['num']}</b>", TC),
+            Paragraph(f"<b>{s['num']}</b>", TCCB),
             Paragraph(f"<b>{s['stage']}</b>", TC),
-            Paragraph(f"<b>{s['pct']}%</b>", TC),
+            Paragraph(f"<b>{s['pct']}%</b>", TCPRIC),
             Paragraph(s['desc'], TC),
-            Paragraph(f"<b>{format_inr(s['cost'])}</b>", TCB)
+            Paragraph(f"<b>{format_inr(s['cost'])}</b>", TCRB)
         ])
-    stage_table = Table(stage_rows, colWidths=stage_col_widths)
+    stage_table = Table(stage_rows, colWidths=stage_col_widths, repeatRows=1)
     stage_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), C_PRIMARY),
         ('GRID', (0,0), (-1,-1), 0.5, C_GRAY200),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [C_WHITE, C_GRAY50]),
-        ('PADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING', (0,0), (-1,-1), 5),
+        ('RIGHTPADDING', (0,0), (-1,-1), 5),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (0,0), (0,-1), 'CENTER'),
+        ('ALIGN', (1,0), (1,-1), 'LEFT'),
+        ('ALIGN', (2,0), (2,-1), 'CENTER'),
+        ('ALIGN', (3,0), (3,-1), 'LEFT'),
+        ('ALIGN', (4,0), (4,-1), 'RIGHT'),
     ]))
     story.append(stage_table)
     story.append(Spacer(1, 0.4 * cm))
@@ -415,16 +552,16 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
     # Header for BOQ table (Prices removed!)
     boq_headers = [
         Paragraph("Code", TCH),
-        Paragraph("Item Name / Description", TCH),
-        Paragraph("Qty", TCH),
+        Paragraph("Item Name / Description", TCHL),
+        Paragraph("Qty", TCHR),
         Paragraph("Unit", TCH)
     ]
     
     boq_col_widths = [
-        CONTENT_W * 0.12,  # Code
-        CONTENT_W * 0.64,  # Description
-        CONTENT_W * 0.12,  # Qty
-        CONTENT_W * 0.12   # Unit
+        CONTENT_W * 0.14,  # Code
+        CONTENT_W * 0.59,  # Description
+        CONTENT_W * 0.14,  # Qty
+        CONTENT_W * 0.13   # Unit
     ]
 
     # Group items by category to make it extremely readable
@@ -434,9 +571,6 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
         cat_items = [x for x in items if x.get('category') == cat]
         if not cat_items:
             continue
-            
-        if cat == 'Painting':
-            story.append(PageBreak()) # Push Painting to next page completely
             
         story.append(Paragraph(f"<b>Category: {cat}</b>", H2))
         
@@ -456,36 +590,34 @@ def generate_estimate_pdf(estimate, items, builder_name=None, builder_logo=None)
             cleaned_desc = clean_description(desc_text)
             
             table_rows.append([
-                Paragraph(it.get('item_code') or it.get('code') or '—', TC),
+                Paragraph(it.get('item_code') or it.get('code') or '—', TCC),
                 Paragraph(cleaned_desc, TC),
-                Paragraph(f"{qty_display:,.2f}".rstrip('0').rstrip('.'), TC),
-                Paragraph(unit_display, TC)
+                Paragraph(f"{qty_display:,.2f}".rstrip('0').rstrip('.'), TCR),
+                Paragraph(unit_display, TCC)
             ])
             
-        cat_table = Table(table_rows, colWidths=boq_col_widths)
+        cat_table = Table(table_rows, colWidths=boq_col_widths, repeatRows=1)
         cat_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), C_PRIMARY),
             ('GRID', (0,0), (-1,-1), 0.5, C_GRAY200),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [C_WHITE, C_GRAY50]),
-            ('PADDING', (0,0), (-1,-1), 6),
-            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('TOPPADDING', (0,0), (-1,-1), 5),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+            ('LEFTPADDING', (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('ALIGN', (0,0), (0,-1), 'CENTER'),
+            ('ALIGN', (1,0), (1,-1), 'LEFT'),
+            ('ALIGN', (2,0), (2,-1), 'RIGHT'),
+            ('ALIGN', (3,0), (3,-1), 'CENTER'),
         ]))
         story.append(cat_table)
-        story.append(Spacer(1, 0.4 * cm))
+        story.append(Spacer(1, 0.35 * cm))
 
-    # Page Header/Footer Callback function for clean PDF page layout numbers
-    def add_page_number(canvas, doc):
-        canvas.saveState()
-        canvas.setFont('Helvetica', 8)
-        canvas.setFillColor(C_GRAY600)
-        page_num_str = f"Page {doc.page}"
-        canvas.drawRightString(PAGE_W - MARGIN, 0.6 * cm, page_num_str)
-        canvas.restoreState()
-
-    doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+    # Build PDF with two-pass NumberedCanvas to ensure accurate 'Page X of Y' and headers/footers
+    doc.build(story, canvasmaker=NumberedCanvas)
     
     # Return binary PDF bytes
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
-
