@@ -43,7 +43,7 @@ export default function Sidebar({ role = 'builder', isOpen = false, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(getCurrentUser());
-  const isDemo = isDemoMode();
+  const isDemo = isDemoMode() && role !== 'admin';
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('bs_sidebar_collapsed') === 'true';
   });

@@ -7,24 +7,47 @@ export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, 
 const BASE_URL = API_BASE_URL;
 
 // ── Demo & Token helpers ────────────────────────────────────────────
+export function isInIframe() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true; // Cross-origin iframe throws on window.top
+  }
+}
+
 export function isDemoMode() {
   if (typeof window === 'undefined') return false;
-  const isDemoSession = sessionStorage.getItem('bs_is_demo') === 'true';
+
+  // Inside ANY iframe, it is always the isolated public demo flow
+  if (isInIframe()) return true;
+
   const isDemoPath = window.location.pathname.startsWith('/demo');
   const params = new URLSearchParams(window.location.search);
   const isDemoParam = params.get('demo') === 'true' || params.get('embed') === 'true' || params.get('iframe') === 'true';
-  const isInIframe = window.self !== window.top;
 
-  if (isDemoSession || isDemoPath || isDemoParam || isInIframe) {
+  if (isDemoPath || isDemoParam) {
     sessionStorage.setItem('bs_is_demo', 'true');
     return true;
   }
-  return false;
+
+  // Top-level window without demo params:
+  // If user is a real logged-in account (e.g. vitabsquare@gmail.com or vigneshrajas.vtab@gmail.com), clear demo flag
+  try {
+    const realUser = JSON.parse(localStorage.getItem('bs_user') || 'null');
+    if (realUser && realUser.email !== 'vtabpublicuser@gmail.com') {
+      sessionStorage.removeItem('bs_is_demo');
+      return false;
+    }
+  } catch {}
+
+  return sessionStorage.getItem('bs_is_demo') === 'true';
 }
 
 export async function initDemoSession() {
   try {
     sessionStorage.setItem('bs_is_demo', 'true');
+    sessionStorage.removeItem('bs_estimate');
     localStorage.removeItem('bs_active_estimate');
     localStorage.removeItem('bs_new_estimate_draft');
 
@@ -65,7 +88,14 @@ export async function checkDemoDownloadStatus() {
   }
 }
 
-function getToken() {
+export function getToken() {
+  if (isDemoMode()) {
+    return (
+      sessionStorage.getItem('bs_demo_token') ||
+      sessionStorage.getItem('bs_token') ||
+      localStorage.getItem('bs_demo_token')
+    );
+  }
   return localStorage.getItem('bs_token');
 }
 
@@ -198,10 +228,19 @@ export const sourceAPI = {
 
 // ── Auth state helpers used across pages ─────────────────────
 export function saveAuthSession(token, user) {
-  localStorage.setItem('bs_token', token);
-  localStorage.setItem('bs_user', JSON.stringify(user));
-  if (user?.email !== 'vtabpublicuser@gmail.com') {
+  if (isDemoMode() || user?.email === 'vtabpublicuser@gmail.com') {
+    sessionStorage.setItem('bs_is_demo', 'true');
+    sessionStorage.setItem('bs_demo_token', token);
+    sessionStorage.setItem('bs_demo_user', JSON.stringify(user));
+    localStorage.setItem('bs_demo_token', token);
+    localStorage.setItem('bs_demo_user', JSON.stringify(user));
+  } else {
+    // Normal builder or admin login in top-level window
     sessionStorage.removeItem('bs_is_demo');
+    sessionStorage.removeItem('bs_demo_token');
+    sessionStorage.removeItem('bs_demo_user');
+    localStorage.setItem('bs_token', token);
+    localStorage.setItem('bs_user', JSON.stringify(user));
   }
 }
 
@@ -209,6 +248,8 @@ export function clearAuthSession() {
   localStorage.removeItem('bs_token');
   localStorage.removeItem('bs_user');
   sessionStorage.removeItem('bs_is_demo');
+  sessionStorage.removeItem('bs_demo_token');
+  sessionStorage.removeItem('bs_demo_user');
   sessionStorage.removeItem('bs_estimate');
   localStorage.removeItem('bs_active_estimate');
   localStorage.removeItem('bs_new_estimate_draft');
@@ -216,6 +257,26 @@ export function clearAuthSession() {
 
 export function getCurrentUser() {
   try {
+    if (isDemoMode()) {
+      const demoUser = JSON.parse(
+        sessionStorage.getItem('bs_demo_user') ||
+        sessionStorage.getItem('bs_user') ||
+        localStorage.getItem('bs_demo_user') ||
+        'null'
+      );
+      if (demoUser && demoUser.email === 'vtabpublicuser@gmail.com') {
+        return demoUser;
+      }
+      return {
+        id: 'e31862e8-e6f7-4c3a-9e6c-71d69c7acc95',
+        email: 'vtabpublicuser@gmail.com',
+        role: 'builder',
+        company_name: 'VTabdemo',
+        phone: '9876543210',
+        city: 'COIMBATORE',
+        is_approved: true
+      };
+    }
     return JSON.parse(localStorage.getItem('bs_user') || 'null');
   } catch {
     return null;

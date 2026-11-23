@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from '../../router';
 import Layout from '../../components/layout/Layout';
-import { formatINR, estimatesAPI, API_BASE_URL, isDemoMode, getCurrentUser, checkDemoDownloadStatus } from '../../services/api';
+import { formatINR, estimatesAPI, API_BASE_URL, isDemoMode, getCurrentUser, checkDemoDownloadStatus, getToken } from '../../services/api';
 
 const CATEGORIES = ['Civil Works', 'Labour', 'Flooring', 'Painting', 'Electrical', 'Plumbing', 'Interiors'];
 
@@ -168,7 +168,7 @@ export default function EstimateResult() {
     }
     try {
       setDownloadingPdf(true);
-      const token = localStorage.getItem('bs_token');
+      const token = getToken();
       const isDemo = isDemoMode();
       const response = await fetch(`${API_BASE_URL}/api/estimates/${result.estimate_id}/download-pdf`, {
         method: 'GET',
@@ -254,7 +254,7 @@ export default function EstimateResult() {
       alert("Estimate ID not found. Save the estimate first.");
       return;
     }
-    const token = localStorage.getItem('bs_token');
+    const token = getToken();
     const url = `${API_BASE_URL}/api/estimates/${result.estimate_id}/export/excel`;
     
     fetch(url, {

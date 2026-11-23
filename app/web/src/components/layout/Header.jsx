@@ -34,7 +34,7 @@ export default function Header({ role = 'user', onHamburgerClick }) {
   const [user, setUser] = useState(getCurrentUser());
   const [showIframeModal, setShowIframeModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
+  const isDemo = (isDemoMode() || user?.email === 'vtabpublicuser@gmail.com') && role !== 'admin';
   const canExtractIframe = role === 'admin' && !isDemo;
   const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
   const windowWidth = useWindowWidth();

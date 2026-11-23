@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from './router';
-import { isDemoMode, initDemoSession } from './services/api';
+import { isDemoMode, initDemoSession, getCurrentUser, getToken } from './services/api';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/user/Dashboard';
 import NewProject from './pages/user/NewProject';
@@ -56,16 +56,21 @@ function DemoLanding() {
 
 function ProtectedRoute({ children, requiredRole }) {
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem('bs_user') || 'null');
   const demo = isDemoMode();
+  const user = getCurrentUser();
 
   if (!user && !demo) return <Navigate to="/login" replace />;
 
   if (demo) {
-    // Disallow Settings and My Projects in demo mode
-    if (location.pathname === '/settings' || location.pathname === '/projects') {
+    // Disallow Admin routes, Settings and My Projects in demo/iframe mode
+    if (location.pathname.startsWith('/admin') || location.pathname === '/settings' || location.pathname === '/projects') {
       return <Navigate to="/dashboard" replace />;
     }
+    // In demo mode, the account is always public demo builder (vtabpublicuser@gmail.com)
+    if (requiredRole && requiredRole !== 'builder') {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return children;
   }
 
   if (requiredRole && user?.role !== requiredRole) {
@@ -82,6 +87,8 @@ function AppContent() {
     // If navigating to /login, clear any demo session flags so login works normally
     if (location.pathname === '/login') {
       sessionStorage.removeItem('bs_is_demo');
+      sessionStorage.removeItem('bs_demo_token');
+      sessionStorage.removeItem('bs_demo_user');
       localStorage.removeItem('bs_token');
       localStorage.removeItem('bs_user');
       sessionStorage.removeItem('bs_estimate');
@@ -91,15 +98,27 @@ function AppContent() {
     }
 
     // Whenever refreshed in demo / iframe mode, reset the estimate flow to start fresh from dashboard
-    const user = JSON.parse(localStorage.getItem('bs_user') || 'null');
-    const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
+    const demo = isDemoMode();
 
-    if (isDemo) {
+    if (demo) {
+      sessionStorage.setItem('bs_is_demo', 'true');
       sessionStorage.removeItem('bs_estimate');
       localStorage.removeItem('bs_active_estimate');
       localStorage.removeItem('bs_new_estimate_draft');
 
-      if (location.pathname !== '/dashboard' && location.pathname !== '/demo' && location.pathname !== '/login') {
+      const token = getToken();
+      const currentUser = getCurrentUser();
+      if (!token || currentUser?.email !== 'vtabpublicuser@gmail.com') {
+        initDemoSession()
+          .then(() => {
+            if (location.pathname === '/' || location.pathname === '/demo' || location.pathname.startsWith('/admin')) {
+              navigate('/dashboard', { replace: true });
+            }
+          })
+          .catch((err) => {
+            console.error('Demo auto-init error:', err);
+          });
+      } else if (location.pathname === '/' || location.pathname === '/demo' || location.pathname.startsWith('/admin')) {
         navigate('/dashboard', { replace: true });
       }
     }
