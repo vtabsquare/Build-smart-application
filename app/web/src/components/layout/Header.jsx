@@ -33,7 +33,6 @@ export default function Header({ role = 'user', onHamburgerClick }) {
   const pageInfo = PAGE_TITLES[path] || { title: 'Buildsmart 360', sub: '' };
   const [user, setUser] = useState(getCurrentUser());
   const [showIframeModal, setShowIframeModal] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
   const canExtractIframe = role === 'admin' && !isDemo;
@@ -89,17 +88,17 @@ export default function Header({ role = 'user', onHamburgerClick }) {
               gap: '6px',
               fontSize: '12px',
               fontWeight: '600',
-              padding: '6px 12px',
+              padding: '6px 14px',
               borderRadius: '8px',
               background: 'linear-gradient(135deg, rgba(15,118,110,0.12) 0%, rgba(8,145,178,0.12) 100%)',
               border: '1px solid rgba(15,118,110,0.3)',
               color: '#0f766e',
               cursor: 'pointer'
             }}
-            title="Extract Embeddable iFrame"
+            title="Get Public Demo Link to open in browser"
           >
-            <Icon name="code" size={14} />
-            {!isSmall && <span>Extract iFrame</span>}
+            <Icon name="eye" size={14} />
+            {!isSmall && <span>Demo Link</span>}
           </button>
         )}
 
@@ -156,7 +155,7 @@ export default function Header({ role = 'user', onHamburgerClick }) {
         )}
       </div>
 
-      {/* Extract iFrame Modal */}
+      {/* Demo Link Modal */}
       {showIframeModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -165,7 +164,7 @@ export default function Header({ role = 'user', onHamburgerClick }) {
           zIndex: 9999, padding: '20px'
         }}>
           <div style={{
-            background: 'white', borderRadius: '16px', maxWidth: '640px', width: '100%',
+            background: 'white', borderRadius: '16px', maxWidth: '560px', width: '100%',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden'
           }}>
             {/* Header */}
@@ -178,11 +177,11 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                   width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(255,255,255,0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <Icon name="code" size={20} />
+                  <Icon name="eye" size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Extract Demo iFrame</h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#99f6e4' }}>Public embed code for {user?.email || 'vtabpublicuser@gmail.com'}</p>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Public Demo Link</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#99f6e4' }}>Direct browser link for clients & demonstrations</p>
                 </div>
               </div>
               <button
@@ -196,13 +195,13 @@ export default function Header({ role = 'user', onHamburgerClick }) {
             {/* Content */}
             <div style={{ padding: '24px' }}>
               <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#475569', lineHeight: 1.5 }}>
-                Embed this interactive estimator directly onto any external website. Visitors are automatically authenticated as <b>VTabdemo</b> with protected demo sandboxing.
+                Open this link directly in any browser or share it with clients. Visitors are automatically authenticated as <b>VTabdemo</b> with protected demo sandboxing.
               </p>
 
               {/* Direct Demo URL */}
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                  Direct Demo URL
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                  Public Demo URL
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
@@ -210,9 +209,10 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                     readOnly
                     value={`${window.location.origin}/demo`}
                     style={{
-                      flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
-                      background: '#f8fafc', fontSize: '13px', color: '#0f172a', fontFamily: 'monospace'
+                      flex: 1, padding: '11px 14px', borderRadius: '8px', border: '1px solid #cbd5e1',
+                      background: '#f8fafc', fontSize: '13px', color: '#0f172a', fontFamily: 'monospace', fontWeight: 600
                     }}
+                    onFocus={e => e.target.select()}
                   />
                   <button
                     onClick={() => {
@@ -221,9 +221,10 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                       setTimeout(() => setCopiedLink(false), 2000);
                     }}
                     style={{
-                      padding: '0 16px', borderRadius: '8px', border: 'none',
+                      padding: '0 18px', borderRadius: '8px', border: 'none',
                       background: copiedLink ? '#059669' : '#0f766e', color: 'white',
-                      fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                      fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     {copiedLink ? '✓ Copied' : 'Copy Link'}
@@ -231,30 +232,10 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                 </div>
               </div>
 
-              {/* Embed Code */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    HTML Embed Code
-                  </label>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Responsive (min-height 850px)</span>
-                </div>
-                <textarea
-                  readOnly
-                  rows={4}
-                  value={`<iframe src="${window.location.origin}/demo" width="100%" height="850" frameborder="0" style="border: 1px solid #e2e8f0; border-radius: 12px; width: 100%; min-height: 850px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" allow="clipboard-write" title="BuildSmart 360 Cost Estimator"></iframe>`}
-                  style={{
-                    width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px',
-                    border: '1px solid #cbd5e1', background: '#0f172a', color: '#38bdf8',
-                    fontSize: '12px', fontFamily: 'monospace', lineHeight: 1.5, resize: 'none'
-                  }}
-                />
-              </div>
-
               {/* Badges / Guarantees */}
               <div style={{
                 background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '10px',
-                padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '20px'
+                padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '24px'
               }}>
                 <div style={{ fontSize: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>🔒</span> Auto-login: VTabdemo
@@ -283,19 +264,16 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                 </button>
                 <button
                   onClick={() => {
-                    const snippet = `<iframe src="${window.location.origin}/demo" width="100%" height="850" frameborder="0" style="border: 1px solid #e2e8f0; border-radius: 12px; width: 100%; min-height: 850px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" allow="clipboard-write" title="BuildSmart 360 Cost Estimator"></iframe>`;
-                    navigator.clipboard.writeText(snippet);
-                    setCopiedCode(true);
-                    setTimeout(() => setCopiedCode(false), 2000);
+                    window.open(`${window.location.origin}/demo`, '_blank');
                   }}
                   style={{
-                    padding: '10px 20px', borderRadius: '8px', border: 'none',
-                    background: copiedCode ? '#059669' : 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)',
+                    padding: '10px 22px', borderRadius: '8px', border: 'none',
+                    background: 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)',
                     color: 'white', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15,118,110,0.25)'
+                    display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(15,118,110,0.25)'
                   }}
                 >
-                  {copiedCode ? '✓ Copied Embed Code!' : 'Copy Embed Code'}
+                  Open in Browser ↗
                 </button>
               </div>
             </div>
