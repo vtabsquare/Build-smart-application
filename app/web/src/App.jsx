@@ -103,7 +103,7 @@ function AppContent() {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [location.pathname]);
+  }, []);
 
   return (
     <Routes>
