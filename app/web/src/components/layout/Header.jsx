@@ -143,16 +143,15 @@ export default function Header({ role = 'user', onHamburgerClick }) {
           )}
         </div>
 
-        {/* Sign out: Hidden inside iframe for public demo, visible in normal browser */}
-        {(!isInIframe || !isDemo) && (
+        {/* Sign out (Disabled in demo mode) */}
+        {!isDemo && (
           <button
             className="btn btn-ghost btn-sm"
             onClick={handleLogout}
             aria-label="Sign out"
             style={{ color: 'var(--color-gray-500)', padding: isSmall ? '6px 8px' : undefined }}
-            title={isDemo ? "Exit Demo mode and return to Login" : "Sign out"}
           >
-            <Icon name="logout" size={16} />{!isSmall && <span>{isDemo ? 'Exit Demo' : 'Sign out'}</span>}
+            <Icon name="logout" size={16} />{!isSmall && <span>Sign out</span>}
           </button>
         )}
       </div>
