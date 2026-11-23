@@ -19,18 +19,27 @@ from services.pdf_generator import generate_estimate_pdf
 estimates_bp = Blueprint('estimates_bp', __name__, url_prefix='/api/estimates')
 
 
+def get_client_ip():
+    """Extract client IP address, handling reverse proxies (Render, Cloudflare, Nginx) accurately."""
+    if request.headers.get('CF-Connecting-IP'):
+        return request.headers.get('CF-Connecting-IP').strip()
+    if request.headers.get('X-Real-IP'):
+        return request.headers.get('X-Real-IP').strip()
+    forwarded = request.headers.get('X-Forwarded-For')
+    if forwarded:
+        parts = [p.strip() for p in forwarded.split(',') if p.strip()]
+        if parts:
+            return parts[0]
+    return request.remote_addr or 'unknown'
+
+
 # ---------------------------------------------------------------------------
 # GET /api/estimates/demo-download-status  –  public, no auth required
 # ---------------------------------------------------------------------------
 @estimates_bp.route('/demo-download-status', methods=['GET'])
 def demo_download_status():
     """Public endpoint: check if the calling IP has already downloaded a demo PDF."""
-    client_ip = (
-        request.headers.get('CF-Connecting-IP') or
-        request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or
-        request.remote_addr or
-        'unknown'
-    )
+    client_ip = get_client_ip()
     with connection() as db:
         db.execute("""
             CREATE TABLE IF NOT EXISTS demo_pdf_downloads (
@@ -1029,12 +1038,7 @@ def download_estimate_pdf(estimate_id):
 
         is_demo = request.headers.get('X-Demo-Mode') == 'true'
         if is_demo or builder_profile.get('email') == 'vtabpublicuser@gmail.com':
-            client_ip = (
-                request.headers.get('CF-Connecting-IP') or
-                request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or
-                request.remote_addr or
-                'unknown'
-            )
+            client_ip = get_client_ip()
             with connection() as db:
                 db.execute("""
                     CREATE TABLE IF NOT EXISTS demo_pdf_downloads (

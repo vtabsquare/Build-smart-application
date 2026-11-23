@@ -280,8 +280,47 @@ export default function Header({ role = 'user', onHamburgerClick }) {
                 <div style={{ fontSize: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>🚫</span> Settings & Projects Disabled
                 </div>
-                <div style={{ fontSize: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                   <span>📄</span> 1 PDF Download / IP limit
+                  {role === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const token = localStorage.getItem('bs_token');
+                          const res = await fetch('/api/admin/demo-downloads/reset', {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          });
+                          const data = await res.json();
+                          if (res.ok) {
+                            alert('Demo download limits have been reset! All devices can download again.');
+                          } else {
+                            alert(data.error || 'Failed to reset demo downloads.');
+                          }
+                        } catch (err) {
+                          alert('Error resetting demo limits: ' + err.message);
+                        }
+                      }}
+                      style={{
+                        marginLeft: '4px',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        border: '1px solid rgba(15,118,110,0.35)',
+                        background: 'rgba(15,118,110,0.1)',
+                        color: '#0f766e',
+                        cursor: 'pointer'
+                      }}
+                      title="Clear recorded demo IP downloads so devices can download again"
+                    >
+                      Reset
+                    </button>
+                  )}
                 </div>
                 <div style={{ fontSize: '12px', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>✉️</span> Client emailing blocked

@@ -10,7 +10,7 @@ import base64
 from flask import Blueprint, request, jsonify
 from services.db import supabase_admin, get_supabase_user
 from services.branding import company_profile, prepare_logo, validate_branding
-from services.local_db import save_metadata
+from services.local_db import save_metadata, connection
 
 admin_bp = Blueprint('admin_bp', __name__, url_prefix='/api/admin')
 
@@ -751,4 +751,32 @@ def update_city_index(city):
         return jsonify({'error': str(pe)}), 403
     except Exception as exc:
         return jsonify({'error': str(exc)}), 500
+
+
+# ---------------------------------------------------------------------------
+# POST /api/admin/demo-downloads/reset  –  reset 1-download limit records
+# ---------------------------------------------------------------------------
+@admin_bp.route('/demo-downloads/reset', methods=['POST'])
+def reset_demo_downloads():
+    """Admin endpoint to clear demo PDF download limit records so testing and re-enabling works cleanly."""
+    try:
+        admin_id = is_admin(request)
+        with connection() as db:
+            db.execute("""
+                CREATE TABLE IF NOT EXISTS demo_pdf_downloads (
+                    ip TEXT PRIMARY KEY,
+                    downloaded_at TEXT,
+                    estimate_id TEXT
+                )
+            """)
+            db.execute("DELETE FROM demo_pdf_downloads")
+            db.commit()
+        from services.audit import log_audit_event
+        log_audit_event(admin_id, "RESET_DEMO_DOWNLOADS", request.remote_addr, status="SUCCESS")
+        return jsonify({'success': True, 'message': 'Demo PDF download limit records have been reset successfully.'}), 200
+    except PermissionError as pe:
+        return jsonify({'error': str(pe)}), 403
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
 
