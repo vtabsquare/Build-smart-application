@@ -186,6 +186,33 @@ def login():
                 # Convert locked_until ISO string to comparison time
                 locked_dt = datetime.fromisoformat(locked_until.replace('Z', '+00:00'))
                 if datetime.now(timezone.utc) < locked_dt:
+                    # If the user provides the correct password, clear the lockout and let them sign in
+                    try:
+                        auth_check = supabase_client.auth.sign_in_with_password({
+                            'email':    email,
+                            'password': password,
+                        })
+                        if auth_check.session and auth_check.user:
+                            supabase_admin.table('profiles').update({
+                                'failed_login_attempts': 0,
+                                'locked_until': None
+                            }).eq('id', profile_db['id']).execute()
+                            profile_db['locked_until'] = None
+                            profile_db['failed_login_attempts'] = 0
+                    except Exception:
+                        pass
+                else:
+                    # Lockout expired naturally
+                    supabase_admin.table('profiles').update({
+                        'failed_login_attempts': 0,
+                        'locked_until': None
+                    }).eq('id', profile_db['id']).execute()
+                    profile_db['locked_until'] = None
+                    profile_db['failed_login_attempts'] = 0
+
+            if profile_db.get('locked_until'):
+                locked_dt = datetime.fromisoformat(profile_db['locked_until'].replace('Z', '+00:00'))
+                if datetime.now(timezone.utc) < locked_dt:
                     log_audit_event(email, "USER_LOGIN", request.remote_addr, status="FAILED", details="Account is locked out")
                     return jsonify({'error': 'Account is temporarily locked due to too many failed attempts. Try again in 15 minutes.'}), 423
 

@@ -193,13 +193,16 @@ def prepare_production():
                 })
             else:
                 uid = row[0]
-                # Ensure password hash is fresh for default test accounts
-                if email in ('builder@buildsmart.test', 'admin@buildsmart.test'):
+                # Ensure password hash is fresh for standard configured accounts
+                configured_admin_email = (os.getenv('BUILDSMART_ADMIN_EMAIL') or 'vitabsquare@gmail.com').strip().lower()
+                configured_builder_email = (os.getenv('BUILDSMART_BUILDER_EMAIL') or 'vigneshrajas.vtab@gmail.com').strip().lower()
+                if email in ('builder@buildsmart.test', 'admin@buildsmart.test', configured_admin_email, configured_builder_email, 'vitabsquare@gmail.com', 'vigneshrajas.vtab@gmail.com'):
                     db.execute('UPDATE accounts SET password_hash=? WHERE id=?', (generate_password_hash(pwd), uid))
                 existing_prof = next((p for p in read_rows(db, 'profiles') if p.get('id') == uid or p.get('email') == email), None)
                 if existing_prof:
                     put_row(db, 'profiles', {
                         **existing_prof,
+                        'role': acc['role'],
                         'is_approved': True,
                         'failed_login_attempts': 0,
                         'locked_until': None,
