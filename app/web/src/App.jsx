@@ -75,11 +75,22 @@ function ProtectedRoute({ children, requiredRole }) {
 }
 
 function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
-    // Whenever refreshed in demo mode, clear old estimate drafts so a fresh instance is always started
-    if (isDemoMode()) {
+    // Whenever refreshed in demo / iframe mode, reset the entire flow to start fresh from dashboard
+    const user = JSON.parse(localStorage.getItem('bs_user') || 'null');
+    const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
+
+    if (isDemo) {
+      sessionStorage.removeItem('bs_estimate');
       localStorage.removeItem('bs_active_estimate');
       localStorage.removeItem('bs_new_estimate_draft');
+
+      if (location.pathname !== '/dashboard' && location.pathname !== '/demo') {
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, []);
 
