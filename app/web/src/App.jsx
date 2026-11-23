@@ -79,7 +79,18 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    // Whenever refreshed in demo / iframe mode, reset the entire flow to start fresh from dashboard
+    // If navigating to /login, clear any demo session flags so login works normally
+    if (location.pathname === '/login') {
+      sessionStorage.removeItem('bs_is_demo');
+      localStorage.removeItem('bs_token');
+      localStorage.removeItem('bs_user');
+      sessionStorage.removeItem('bs_estimate');
+      localStorage.removeItem('bs_active_estimate');
+      localStorage.removeItem('bs_new_estimate_draft');
+      return;
+    }
+
+    // Whenever refreshed in demo / iframe mode, reset the estimate flow to start fresh from dashboard
     const user = JSON.parse(localStorage.getItem('bs_user') || 'null');
     const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
 
@@ -88,11 +99,11 @@ function AppContent() {
       localStorage.removeItem('bs_active_estimate');
       localStorage.removeItem('bs_new_estimate_draft');
 
-      if (location.pathname !== '/dashboard' && location.pathname !== '/demo') {
+      if (location.pathname !== '/dashboard' && location.pathname !== '/demo' && location.pathname !== '/login') {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, []);
+  }, [location.pathname]);
 
   return (
     <Routes>

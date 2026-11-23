@@ -36,6 +36,7 @@ export default function Header({ role = 'user', onHamburgerClick }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const isDemo = isDemoMode() || user?.email === 'vtabpublicuser@gmail.com';
   const canExtractIframe = role === 'admin' && !isDemo;
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
   const windowWidth = useWindowWidth();
   const isSmall = windowWidth <= 480;
   const isMobile = windowWidth <= 768;
@@ -142,15 +143,16 @@ export default function Header({ role = 'user', onHamburgerClick }) {
           )}
         </div>
 
-        {/* Sign out (Disabled in demo mode) */}
-        {!isDemo && (
+        {/* Sign out: Hidden inside iframe for public demo, visible in normal browser */}
+        {(!isInIframe || !isDemo) && (
           <button
             className="btn btn-ghost btn-sm"
             onClick={handleLogout}
             aria-label="Sign out"
             style={{ color: 'var(--color-gray-500)', padding: isSmall ? '6px 8px' : undefined }}
+            title={isDemo ? "Exit Demo mode and return to Login" : "Sign out"}
           >
-            <Icon name="logout" size={16} />{!isSmall && <span>Sign out</span>}
+            <Icon name="logout" size={16} />{!isSmall && <span>{isDemo ? 'Exit Demo' : 'Sign out'}</span>}
           </button>
         )}
       </div>
