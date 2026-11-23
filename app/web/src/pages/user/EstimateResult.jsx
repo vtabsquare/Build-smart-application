@@ -1626,90 +1626,95 @@ export default function EstimateResult() {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 999999,
-          padding: '20px',
+          padding: '24px',
           boxSizing: 'border-box'
         }}>
           <div style={{
             background: 'white',
-            borderRadius: '16px',
-            maxWidth: '520px',
+            borderRadius: '20px',
+            maxWidth: '660px',
             width: '100%',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)',
+            boxShadow: '0 25px 60px -12px rgba(0,0,0,0.45)',
             overflow: 'hidden',
-            maxHeight: '90vh',
+            maxHeight: '92vh',
             display: 'flex',
             flexDirection: 'column'
           }}>
             <div style={{
-              padding: '20px 24px', background: 'linear-gradient(135deg, #0f766e 0%, #0f172a 100%)',
+              padding: '22px 28px', background: 'linear-gradient(135deg, #0f766e 0%, #0f172a 100%)',
               color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
-                  width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(255,255,255,0.15)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px'
+                  width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(255,255,255,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
                 }}>
                   ℹ️
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700 }}>{demoContactModal.title}</h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#99f6e4' }}>BuildSmart 360 Public Demo</p>
+                  <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 800, letterSpacing: '-0.2px' }}>{demoContactModal.title}</h3>
+                  <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#99f6e4', fontWeight: 500 }}>BuildSmart 360 Public Demo</p>
                 </div>
               </div>
               <button
                 onClick={() => setDemoContactModal(null)}
-                style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}
+                style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '24px', lineHeight: 1, padding: '4px' }}
+                aria-label="Close"
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ padding: '24px', overflowY: 'auto' }}>
+            <div style={{ padding: '28px', overflowY: 'auto' }}>
               <div style={{
-                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px',
-                padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px'
+                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px',
+                padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px'
               }}>
-                <span style={{ fontSize: '20px' }}>🚫</span>
-                <span style={{ fontSize: '13px', color: '#991b1b', fontWeight: 600 }}>
-                  Demo Version Notice: Email delivery is disabled.
+                <span style={{ fontSize: '22px', flexShrink: 0 }}>🚫</span>
+                <span style={{ fontSize: '14px', color: '#991b1b', fontWeight: 600, lineHeight: 1.4 }}>
+                  {demoContactModal.notice || (
+                    demoContactModal.title?.toLowerCase().includes('email')
+                      ? 'Demo Version Notice: Email delivery is disabled.'
+                      : 'Demo Version Notice: PDF download limit reached (1 PDF per device in demo).'
+                  )}
                 </span>
               </div>
 
-              <p style={{ margin: '0 0 20px', fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+              <p style={{ margin: '0 0 22px', fontSize: '15px', color: '#334155', lineHeight: 1.65 }}>
                 {demoContactModal.message}
               </p>
 
               <div style={{
-                background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px',
-                padding: '16px', marginBottom: '24px'
+                background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px',
+                padding: '20px 22px', marginBottom: '26px'
               }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>
                   Contact VTab Square for Further Details
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#1e293b' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Company:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', color: '#1e293b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontWeight: 600, width: '85px', color: '#64748b' }}>Company:</span>
                     <span style={{ fontWeight: 700, color: '#0f766e' }}>VTab Square</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Email:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontWeight: 600, width: '85px', color: '#64748b' }}>Email:</span>
                     <a href="mailto:vitabsquare@gmail.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>vitabsquare@gmail.com</a>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, width: '75px', color: '#64748b' }}>Phone:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontWeight: 600, width: '85px', color: '#64748b' }}>Phone:</span>
                     <a href="tel:+919876543210" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>+91 9876543210</a>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button
                   onClick={() => setDemoContactModal(null)}
                   style={{
-                    padding: '10px 20px', borderRadius: '8px', border: 'none',
+                    padding: '12px 28px', borderRadius: '10px', border: 'none',
                     background: 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)',
-                    color: 'white', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(15,118,110,0.25)'
+                    color: 'white', fontSize: '14.5px', fontWeight: 700, cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(15,118,110,0.3)'
                   }}
                 >
                   Understood
